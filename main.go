@@ -9,7 +9,7 @@ import (
 	"io"		// EOF const
 	"strconv"	// parse strings
 	CAN "github.com/brendoncarroll/go-can" // CAN-Bus Binding
-	"time"		// sleepy stuff
+	"sync"
 )
 
 type can2mqtt struct {
@@ -18,38 +18,44 @@ type can2mqtt struct {
 	mqttTopic string
 }
 var can2mqttPairs []can2mqtt
+var dbg bool = false
+var wg sync.WaitGroup
 
 func main() {
 	if len(os.Args) == 1 {
 		printHelp()
 	} else {
+		if len(os.Args) == 5 {
+			if os.Args[4] == "-v" { dbg = true }
+		}
 		if os.Args[1] == "test-mqtt" {
-			fmt.Println("main: Starting MQTT-Test:")
+			dbg = true
+			if dbg { fmt.Printf("main: Starting MQTT-Test:\n") }
 			MQTTStart(os.Args[2])
 			MQTTPublish("test", os.Args[3])
 		} else if os.Args[1] == "test-can" {
-			fmt.Println("main: Starting CAN-Bus-Test:")
+			dbg = true
+			if dbg { fmt.Printf("main: Starting CAN-Bus-Test:\n") }
 			CANStart(os.Args[2])
-			data, datalength := ascii2byte(os.Args[3])
+			data, datalength := ascii2bytes(os.Args[3])
 			cf := CAN.CANFrame{ID: 112, Len: datalength, Data: data}
 			CANPublish(cf)
 		} else {
+			wg.Add(1)
 			go CANStart(os.Args[2]) // epic parallel shit ;-)
 			MQTTStart(os.Args[3])
 			readC2MPFromFile(os.Args[1])
-			time.Sleep(-1)
-			time.Sleep(1000000 * time.Millisecond)
+			wg.Wait()
 		}
 	}
 }
 
 func printHelp() {
-	fmt.Println("Willkommen zur CAN2MQTT Bridge!")
-	fmt.Println()
-	fmt.Println("Usage: can2mqtt <file> <CAN-Interface> <MQTT-Connect>")
-	fmt.Println("<file>: entweder eine Datei oder test-can oder test-mqtt")
-	fmt.Println("<CAN-Interface>: Ein CAN-Interface z.B. can0")
-	fmt.Println("<MQTT-Connect>: Connectring fuer MQTT. Beispiel: tcp://localhost:1883")
+	fmt.Printf("Willkommen zur CAN2MQTT Bridge!\n\n")
+	fmt.Printf("Usage: can2mqtt <file> <CAN-Interface> <MQTT-Connect>\n")
+	fmt.Printf("<file>: entweder eine Datei oder test-can oder test-mqtt\n")
+	fmt.Printf("<CAN-Interface>: Ein CAN-Interface z.B. can0\n")
+	fmt.Printf("<MQTT-Connect>: Connectring fuer MQTT. Beispiel: tcp://localhost:1883\n")
 }
 
 func readC2MPFromFile(filename string) {
@@ -74,17 +80,19 @@ func readC2MPFromFile(filename string) {
 		MQTTSubscribe(record[2])
 		CANSubscribe(uint32(i))
 	}
-	fmt.Println("main: Die folgenden CAN-MQTT Kombinationen wurden gelesen:")
-	fmt.Println("main: CAN-ID\t\tConversion Mode\t\tMQTT-Topic")
-	for _, c2mp := range can2mqttPairs {
-		fmt.Printf("main: %d\t\t%s\t\t%s\n", c2mp.canId, c2mp.convMethod, c2mp.mqttTopic)
+	if dbg {
+		fmt.Printf("main: Die folgenden CAN-MQTT Kombinationen wurden gelesen:\n")
+		fmt.Printf("main: CAN-ID\t\tConversion Mode\t\tMQTT-Topic")
+		for _, c2mp := range can2mqttPairs {
+			fmt.Printf("main: %d\t\t%s\t\t%s\n", c2mp.canId, c2mp.convMethod, c2mp.mqttTopic)
+		}
 	}
 }
 
 func IsInSlice(canId int, mqttTopic string) bool {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId || c2mp.mqttTopic == mqttTopic {
-			fmt.Printf("main: Die ID %d oder das Topic %s wurden bereits angegeben!\n", canId, mqttTopic)
+			if dbg {fmt.Printf("main: Die ID %d oder das Topic %s wurden bereits angegeben!\n", canId, mqttTopic) }
 			return true
 		}
 	}
