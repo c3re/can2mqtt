@@ -1,22 +1,23 @@
 package main
 
 import (
-	"bufio"		// Reader
-	"encoding/csv"	// CSV Management
-	"fmt"		// printfoo
-	"log"		// error management
-	"os"		// open files
-	"io"		// EOF const
-	"strconv"	// parse strings
+	"bufio"                                // Reader
+	"encoding/csv"                         // CSV Management
+	"fmt"                                  // printfoo
 	CAN "github.com/brendoncarroll/go-can" // CAN-Bus Binding
+	"io"                                   // EOF const
+	"log"                                  // error management
+	"os"                                   // open files
+	"strconv"                              // parse strings
 	"sync"
 )
 
 type can2mqtt struct {
-	canId int
+	canId      int
 	convMethod string
-	mqttTopic string
+	mqttTopic  string
 }
+
 var can2mqttPairs []can2mqtt
 var dbg bool = false
 var wg sync.WaitGroup
@@ -26,16 +27,22 @@ func main() {
 		printHelp()
 	} else {
 		if len(os.Args) == 5 {
-			if os.Args[4] == "-v" { dbg = true }
+			if os.Args[4] == "-v" {
+				dbg = true
+			}
 		}
 		if os.Args[1] == "test-mqtt" {
 			dbg = true
-			if dbg { fmt.Printf("main: Starting MQTT-Test:\n") }
+			if dbg {
+				fmt.Printf("main: Starting MQTT-Test:\n")
+			}
 			MQTTStart(os.Args[2])
 			MQTTPublish("test", os.Args[3])
 		} else if os.Args[1] == "test-can" {
 			dbg = true
-			if dbg { fmt.Printf("main: Starting CAN-Bus-Test:\n") }
+			if dbg {
+				fmt.Printf("main: Starting CAN-Bus-Test:\n")
+			}
 			CANStart(os.Args[2])
 			data, datalength := ascii2bytes(os.Args[3])
 			cf := CAN.CANFrame{ID: 112, Len: datalength, Data: data}
@@ -76,7 +83,7 @@ func readC2MPFromFile(filename string) {
 		if IsInSlice(i, record[2]) {
 			panic("main: Jede ID und jedes Topic darf maximal einmal auftreten!")
 		}
-		can2mqttPairs = append(can2mqttPairs, can2mqtt{i,record[1],record[2]})
+		can2mqttPairs = append(can2mqttPairs, can2mqtt{i, record[1], record[2]})
 		MQTTSubscribe(record[2])
 		CANSubscribe(uint32(i))
 	}
@@ -92,7 +99,9 @@ func readC2MPFromFile(filename string) {
 func IsInSlice(canId int, mqttTopic string) bool {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId || c2mp.mqttTopic == mqttTopic {
-			if dbg {fmt.Printf("main: Die ID %d oder das Topic %s wurden bereits angegeben!\n", canId, mqttTopic) }
+			if dbg {
+				fmt.Printf("main: Die ID %d oder das Topic %s wurden bereits angegeben!\n", canId, mqttTopic)
+			}
 			return true
 		}
 	}
@@ -119,7 +128,6 @@ func getConvTopic(topic string) string {
 	return "-1"
 }
 
-
 func getId(mqttTopic string) int {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.mqttTopic == mqttTopic {
@@ -130,7 +138,6 @@ func getId(mqttTopic string) int {
 	return -1
 }
 
-
 func getConvId(canId int) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId {
@@ -140,4 +147,3 @@ func getConvId(canId int) string {
 	// Fehlerfall
 	return "-1"
 }
-
