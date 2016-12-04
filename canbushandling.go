@@ -45,7 +45,7 @@ func CANStart(iface string) {
 				if dbg {
 					fmt.Printf("canbushandler: ID %d ist abonniert starte receivehandler\n", cf.ID)
 				}
-				handleCAN(cf)
+				go handleCAN(cf)
 				id_sub = true
 				break
 			}

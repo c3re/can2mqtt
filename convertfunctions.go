@@ -29,7 +29,12 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		}
 		data[0] = dec2byte(payload)
 		len = 1
-	} else {
+	} else if convertMethod == "openorclosed2oneorzero" {
+		if dbg {
+			fmt.Printf("convertfunctions: Benutze convertmodus dec2byte (reverse of %s)\n", convertMethod)
+		}
+			data, len = oneorzero2openorclosed(payload)	
+		} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmodus %s nicht gefunden. Benutze Fallback ascii2byte\n", convertMethod)
 		}
@@ -58,6 +63,11 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 			fmt.Printf("convertfunctions: Benutze convertmodus byte2dec\n")
 		}
 		return byte2dec(payload[0])
+	} else if convertMethod == "openorclosed2oneorzero" {
+		if dbg {
+			fmt.Printf("convertfunctions: Benutze convertmodus byte2dec\n")
+		}
+		return openorclosed2oneorzero(payload[0])
 	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmodus %s nicht gefunden. Benutze Fallback bytes2ascii\n", convertMethod)
@@ -91,4 +101,23 @@ func dec2byte(payload string) byte {
 		return byte(255)
 	}
 	return byte(tmp)
+}
+
+// openorclosed2oneorzero. Nimmt ein byte (ascii string)entgegen und gibt einen String open or closed zurueck
+// 1 -> opened
+// 0 und alles andere -> closed
+func openorclosed2oneorzero(payload byte) string {
+	if string(payload) == "o" {
+		return "1"
+	} else {
+		return "0"
+	}
+}
+
+func oneorzero2openorclosed(payload string) ([8]byte, uint32) {
+	if payload == "1" { 
+		return ascii2bytes("open   ")
+	} else {
+		return ascii2bytes("closed ")
+	}
 }
