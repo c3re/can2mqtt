@@ -1,3 +1,4 @@
+// can2mqtt Bridge
 package main
 
 import (
@@ -12,6 +13,10 @@ import (
 	"sync"
 )
 
+// can2mqtt is a struct that represents the internal type of 
+// one line of the can2mqtt.csv file. Therefore it has
+// the same three fields as the can2mqtt.csv file: CAN-ID,
+// conversion method and MQTT-Topic.
 type can2mqtt struct {
 	canId      int
 	convMethod string
@@ -22,6 +27,7 @@ var can2mqttPairs []can2mqtt
 var dbg bool = false
 var wg sync.WaitGroup
 
+// main is the starting Point for the Program
 func main() {
 	if len(os.Args) == 1 {
 		printHelp()
@@ -34,14 +40,14 @@ func main() {
 		if os.Args[1] == "test-mqtt" {
 			dbg = true
 			if dbg {
-				fmt.Printf("main: Starting MQTT-Test:\n")
+				fmt.Printf("main: starting MQTT-test:\n")
 			}
 			MQTTStart(os.Args[2])
 			MQTTPublish("test", os.Args[3])
 		} else if os.Args[1] == "test-can" {
 			dbg = true
 			if dbg {
-				fmt.Printf("main: Starting CAN-Bus-Test:\n")
+				fmt.Printf("main: starting CAN-Bus-test:\n")
 			}
 			CANStart(os.Args[2])
 			data, datalength := ascii2bytes(os.Args[3])
@@ -58,11 +64,11 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Printf("Willkommen zur CAN2MQTT Bridge!\n\n")
+	fmt.Printf("welcome to the CAN2MQTT bridge!\n\n")
 	fmt.Printf("Usage: can2mqtt <file> <CAN-Interface> <MQTT-Connect>\n")
-	fmt.Printf("<file>: entweder eine Datei oder test-can oder test-mqtt\n")
-	fmt.Printf("<CAN-Interface>: Ein CAN-Interface z.B. can0\n")
-	fmt.Printf("<MQTT-Connect>: Connectring fuer MQTT. Beispiel: tcp://localhost:1883\n")
+	fmt.Printf("<file>: either a file or one of the strings "test-can or "test-mqtt"\n")
+	fmt.Printf("<CAN-Interface>: a CAN-Interface e.g. can0\n")
+	fmt.Printf("<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://localhost:1883\n")
 }
 
 func readC2MPFromFile(filename string) {
@@ -81,15 +87,15 @@ func readC2MPFromFile(filename string) {
 		}
 		i, err := strconv.Atoi(record[0])
 		if IsInSlice(i, record[2]) {
-			panic("main: Jede ID und jedes Topic darf maximal einmal auftreten!")
+			panic("main: each ID and each topic is only allowed once!")
 		}
 		can2mqttPairs = append(can2mqttPairs, can2mqtt{i, record[1], record[2]})
 		MQTTSubscribe(record[2])
 		CANSubscribe(uint32(i))
 	}
 	if dbg {
-		fmt.Printf("main: Die folgenden CAN-MQTT Kombinationen wurden gelesen:\n")
-		fmt.Printf("main: CAN-ID\t\tConversion Mode\t\tMQTT-Topic")
+		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
+		fmt.Printf("main: CAN-ID\t\t conversion mode\t\tMQTT-topic")
 		for _, c2mp := range can2mqttPairs {
 			fmt.Printf("main: %d\t\t%s\t\t%s\n", c2mp.canId, c2mp.convMethod, c2mp.mqttTopic)
 		}
@@ -100,7 +106,7 @@ func IsInSlice(canId int, mqttTopic string) bool {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId || c2mp.mqttTopic == mqttTopic {
 			if dbg {
-				fmt.Printf("main: Die ID %d oder das Topic %s wurden bereits angegeben!\n", canId, mqttTopic)
+				fmt.Printf("main: The ID %d or the Topic %s is already in the list!\n", canId, mqttTopic)
 			}
 			return true
 		}

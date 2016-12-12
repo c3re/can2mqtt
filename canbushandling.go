@@ -13,37 +13,37 @@ var csi_lock sync.Mutex // CAN subscribed IDs Mutex
 
 func CANStart(iface string) {
 	if dbg {
-		fmt.Printf("canbushandler: Initialisiere CAN-Bus Interface %s\n", iface)
+		fmt.Printf("canbushandler: initializing CAN-Bus interface %s\n", iface)
 	}
 	var err error
 	cb, err = CAN.NewCANBus(iface)
 	if err != nil {
 		if dbg {
-			fmt.Printf("canbushandler: Error beim aktivieren von CAN-Bus Interface %s\n", iface)
+			fmt.Printf("canbushandler: error while activating CAN-Bus interface: %s\n", iface)
 		}
 		log.Fatal(err)
 	}
 	if dbg {
-		fmt.Printf("canbushandler: Interface %s erfolgreich initialisiert.\n", iface)
+		fmt.Printf("canbushandler: successfully initialized CAN-Bus interface %s.\n", iface)
 	}
 	var cf CAN.CANFrame
 	if dbg {
-		fmt.Printf("canbushadler: Betrete jetzt Endlosschleife\n")
+		fmt.Printf("canbushadler: entering infinite loop\n")
 	}
 	for {
 		cb.Read(&cf)
 		if dbg {
-			fmt.Printf("canbushandler: CAN-Frame empfangen (ID:%d). Lock Mutex\n", cf.ID)
+			fmt.Printf("canbushandler: received CAN-Frame: (ID:%d). Locking mutex\n", cf.ID)
 		}
 		csi_lock.Lock()
 		if dbg {
-			fmt.Printf("canbushandler: Mutex erfolreich gelockt.\n")
+			fmt.Printf("canbushandler: mutex was locked successfully.\n")
 		}
-		var id_sub = false // zeigt an ob die ID subscribed war oder nicht
+		var id_sub = false // indicates, wether the id was subscribed or not
 		for _, i := range csi {
 			if i == cf.ID {
 				if dbg {
-					fmt.Printf("canbushandler: ID %d ist abonniert starte receivehandler\n", cf.ID)
+					fmt.Printf("canbushandler: ID %d is in subscribed list, calling receivehadler.\n", cf.ID)
 				}
 				go handleCAN(cf)
 				id_sub = true
@@ -52,12 +52,12 @@ func CANStart(iface string) {
 		}
 		if !id_sub {
 			if dbg {
-				fmt.Printf("canbushandler: ID:%d war nicht abonniert. /dev/nulled that frame...\n", cf.ID)
+				fmt.Printf("canbushandler: ID:%d was not subscribed. /dev/nulled that frame...\n", cf.ID)
 			}
 		}
 		csi_lock.Unlock()
 		if dbg {
-			fmt.Printf("canbushandler: Mutex unlocked.\n")
+			fmt.Printf("canbushandler: unlocked mutex.\n")
 		}
 	}
 }
@@ -67,7 +67,7 @@ func CANSubscribe(id uint32) {
 	csi = append(csi, id)
 	csi_lock.Unlock()
 	if dbg {
-		fmt.Printf("canbushandler: Mutex lock&unlock successful Subscribed to ID:%d\n", id)
+		fmt.Printf("canbushandler: mutex lock+unlock successful. subscribed to ID:%d\n", id)
 	}
 }
 
@@ -82,19 +82,19 @@ func CANUnsubscribe(id uint32) {
 	csi = tmp
 	csi_lock.Unlock()
 	if dbg {
-		fmt.Printf("canbushandler: Mutex lock&unlock successful unsubscribed ID:%d\n", id)
+		fmt.Printf("canbushandler: mutex lock+unlock successful. unsubscribed ID:%d\n", id)
 	}
 }
 
 func CANPublish(cf CAN.CANFrame) {
 	CANUnsubscribe(cf.ID)
 	if dbg {
-		fmt.Println("canbushandler: Sende CAN-Frame: ", cf)
+		fmt.Println("canbushandler: sending CAN-Frame: ", cf)
 	}
 	err := cb.Write(&cf)
 	if err != nil {
 		if dbg {
-			fmt.Printf("canbushandler: Error beim Senden des Frames\n")
+			fmt.Printf("canbushandler: error while transmitting the CAN-Frame.\n")
 		}
 		log.Fatal(err)
 	}

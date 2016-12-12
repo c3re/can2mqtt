@@ -13,44 +13,44 @@ func MQTTStart(connectString string) {
 	clientsettings.SetDefaultPublishHandler(handleMQTT)
 	client = MQTT.NewClient(clientsettings)
 	if dbg {
-		fmt.Printf("mqtthandler: Starte Verbindung nach: %s\n", connectString)
+		fmt.Printf("mqtthandler: starting connection to: %s\n", connectString)
 	}
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		fmt.Println("mqtthandler: Oh no an error occured...")
 		panic(token.Error())
 	}
 	if dbg {
-		fmt.Printf("mqtthandler: Verbindung erfolgreich hergestellt\n")
+		fmt.Printf("mqtthandler: connection established!\n")
 	}
 }
 
 func MQTTSubscribe(topic string) {
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		fmt.Printf("mqtthandler: Error beim abonnieren von %s\n", topic, token.Error())
+		fmt.Printf("mqtthandler: error while subscribing: %s\n", topic, token.Error())
 	}
 	if dbg {
-		fmt.Printf("mqtthandler: Topic: %s erfolgreich abonniert\n", topic)
+		fmt.Printf("mqtthandler: successfully subscribed: %s\n", topic)
 	}
 }
 
 func MQTTUnsubscribe(topic string) {
 	if token := client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
-		fmt.Printf("mqtthandler: Error beim unsuscriben von %s\n", topic, token.Error())
+		fmt.Printf("mqtthandler: Error while unsuscribing :%s\n", topic, token.Error())
 	}
 	if dbg {
-		fmt.Printf("mqtthandler: Topic: %s erfolgreich unsubscribed\n", topic)
+		fmt.Printf("mqtthandler: successfully unsubscribed %s\n", topic)
 	}
 }
 
 func MQTTPublish(topic string, payload string) {
 	if dbg {
-		fmt.Printf("mqtthandler: Sende Nachricht: \"%s\" an Topic: \"%s\"\n", payload, topic)
+		fmt.Printf("mqtthandler: sending message: \"%s\" to topic: \"%s\"\n", payload, topic)
 	}
 	MQTTUnsubscribe(topic)
 	token := client.Publish(topic, 0, false, payload)
 	token.Wait()
 	if dbg {
-		fmt.Printf("mqtthandler: Nachricht erfolgreich gesendet.\n")
+		fmt.Printf("mqtthandler: message was transmitted successfully!.\n")
 	}
 	MQTTSubscribe(topic)
 }
