@@ -9,7 +9,7 @@ import (
 // handleCAN is the standard receivehandler for CANFrames
 // and does the following:
 // 1. calling standard convertfunction: convert2MQTT
-// 2. sending the message 
+// 2. sending the message
 func handleCAN(cf CAN.CANFrame) {
 	if dbg {
 		fmt.Printf("receivehandler: received CANFrame: ID: %d, len: %d, payload %s\n", cf.ID, cf.Len, cf.Data)

@@ -32,8 +32,8 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmodus dec2byte (reverse of %s)\n", convertMethod)
 		}
-			data, len = oneorzero2openorclosed(payload)	
-		} else {
+		data, len = oneorzero2openorclosed(payload)
+	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmode %s not found. using fallback ascii2byte\n", convertMethod)
 		}
@@ -116,7 +116,7 @@ func openorclosed2oneorzero(payload byte) string {
 }
 
 func oneorzero2openorclosed(payload string) ([8]byte, uint32) {
-	if payload == "1" { 
+	if payload == "1" {
 		return ascii2bytes("open   ")
 	} else {
 		return ascii2bytes("closed ")

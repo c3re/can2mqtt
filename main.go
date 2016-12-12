@@ -5,7 +5,6 @@ import (
 	"bufio"                                // Reader
 	"encoding/csv"                         // CSV Management
 	"fmt"                                  // printfoo
-	CAN "github.com/brendoncarroll/go-can" // CAN-Bus Binding
 	"io"                                   // EOF const
 	"log"                                  // error management
 	"os"                                   // open files
@@ -13,7 +12,7 @@ import (
 	"sync"
 )
 
-// can2mqtt is a struct that represents the internal type of 
+// can2mqtt is a struct that represents the internal type of
 // one line of the can2mqtt.csv file. Therefore it has
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
@@ -23,50 +22,49 @@ type can2mqtt struct {
 	mqttTopic  string
 }
 
-var can2mqttPairs []can2mqtt
-var dbg bool = false
+var can2mqttPairs []can2mqtt 	// representation of can2mqtt.csv
+var dbg bool = false 		// verbose on of [-v]
+var ci string = "can0"		// the CAN-Interface [-c]
+var cs string = "tcp://localhost:1883" // mqtt-connectstring [-m]
+var c2mf string = "can2mqtt.csv" // path to the can2mqtt.csv [-f]
+var conf bool = true 		// represents wether a running conf
+				// is set or not
 var wg sync.WaitGroup
 
 // main is the starting Point for the Program
 func main() {
-	if len(os.Args) == 1 {
-		printHelp()
-	} else {
-		if len(os.Args) == 5 {
-			if os.Args[4] == "-v" {
+	for i := 1; i < len(os.Args); i++ {
+		switch os.Args[i] {
+			case "-v":
 				dbg = true
-			}
+			case "-c":
+				i++
+				ci = os.Args[i]
+			case "-m":
+				i++
+				cs = os.Args[i]
+			case "-f":
+				i++
+				c2mf = os.Args[i] 
+			default:
+				i = len(os.Args)
+				conf = false
+				printHelp()	
 		}
-		if os.Args[1] == "test-mqtt" {
-			dbg = true
-			if dbg {
-				fmt.Printf("main: starting MQTT-test:\n")
-			}
-			MQTTStart(os.Args[2])
-			MQTTPublish("test", os.Args[3])
-		} else if os.Args[1] == "test-can" {
-			dbg = true
-			if dbg {
-				fmt.Printf("main: starting CAN-Bus-test:\n")
-			}
-			CANStart(os.Args[2])
-			data, datalength := ascii2bytes(os.Args[3])
-			cf := CAN.CANFrame{ID: 112, Len: datalength, Data: data}
-			CANPublish(cf)
-		} else {
+		}
+		if conf {
 			wg.Add(1)
-			go CANStart(os.Args[2]) // epic parallel shit ;-)
-			MQTTStart(os.Args[3])
-			readC2MPFromFile(os.Args[1])
+			go CANStart(ci) // epic parallel shit ;-)
+			MQTTStart(cs)
+			readC2MPFromFile(c2mf)
 			wg.Wait()
 		}
-	}
 }
 
 func printHelp() {
 	fmt.Printf("welcome to the CAN2MQTT bridge!\n\n")
-	fmt.Printf("Usage: can2mqtt <file> <CAN-Interface> <MQTT-Connect>\n")
-	fmt.Printf("<file>: either a file or one of the strings "test-can or "test-mqtt"\n")
+	fmt.Printf("Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h]\n")
+	fmt.Printf("<file>: a can2mqtt.csv file\n")
 	fmt.Printf("<CAN-Interface>: a CAN-Interface e.g. can0\n")
 	fmt.Printf("<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://localhost:1883\n")
 }
