@@ -2,14 +2,14 @@
 package main
 
 import (
-	"fmt"          // printfoo
-	"os"           // open files
+	"fmt" // printfoo
 	C2M "github.com/c3re/can2mqtt"
+	"os" // args
 )
 
-
+// Parses commandline arguments
 func main() {
-conf := true
+	conf := true
 	for i := 1; i < len(os.Args); i++ {
 		switch os.Args[i] {
 		case "-v":
@@ -34,6 +34,7 @@ conf := true
 	}
 }
 
+// help function (obvious...)
 func printHelp() {
 	fmt.Printf("welcome to the CAN2MQTT bridge!\n\n")
 	fmt.Printf("Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h]\n")

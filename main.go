@@ -1,14 +1,14 @@
 package can2mqtt
 
 import (
-        "bufio"        // Reader
-        "encoding/csv" // CSV Management
-        "fmt"          // printfoo
-        "io"           // EOF const
-        "log"          // error management
-        "os"           // open files
-        "strconv"      // parse strings
-        "sync"
+	"bufio"        // Reader
+	"encoding/csv" // CSV Management
+	"fmt"          // printfoo
+	"io"           // EOF const
+	"log"          // error management
+	"os"           // open files
+	"strconv"      // parse strings
+	"sync"
 )
 
 // can2mqtt is a struct that represents the internal type of
@@ -16,9 +16,9 @@ import (
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
-        canId      int
-        convMethod string
-        mqttTopic  string
+	canId      int
+	convMethod string
+	mqttTopic  string
 }
 
 var can2mqttPairs []can2mqtt           // representation of can2mqtt.csv
@@ -61,13 +61,15 @@ func SetCs(s string) {
 // parses the can2mqtt.csv file and from there everything takes
 // its course...
 func Start() {
-		wg.Add(1)
-		go canStart(ci) // epic parallel shit ;-)
-		mqttStart(cs)
-		readC2MPFromFile(c2mf)
-		wg.Wait()
+	wg.Add(1)
+	go canStart(ci) // epic parallel shit ;-)
+	mqttStart(cs)
+	readC2MPFromFile(c2mf)
+	wg.Wait()
 }
 
+// this functions opens, parses and extracts information out
+// of the can2mqtt.csv
 func readC2MPFromFile(filename string) {
 
 	file, err := os.Open(filename)
@@ -99,6 +101,7 @@ func readC2MPFromFile(filename string) {
 	}
 }
 
+// check function to check if a topic or an ID is in the slice
 func isInSlice(canId int, mqttTopic string) bool {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId || c2mp.mqttTopic == mqttTopic {
@@ -111,6 +114,7 @@ func isInSlice(canId int, mqttTopic string) bool {
 	return false
 }
 
+// get the corresponding topic for an ID
 func getTopic(canId int) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId {
@@ -121,6 +125,7 @@ func getTopic(canId int) string {
 	return "-1"
 }
 
+// get the conversion mode for a given topic
 func getConvTopic(topic string) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.mqttTopic == topic {
@@ -131,6 +136,7 @@ func getConvTopic(topic string) string {
 	return "-1"
 }
 
+// get the correspondig ID for a given topic
 func getId(mqttTopic string) int {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.mqttTopic == mqttTopic {
@@ -141,6 +147,7 @@ func getId(mqttTopic string) int {
 	return -1
 }
 
+// get the convertode for a given ID
 func getConvId(canId int) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId {

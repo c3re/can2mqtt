@@ -9,10 +9,12 @@ import (
 	"sync"
 )
 
-var cb *CAN.CANBus
+var cb *CAN.CANBus      // our CANBus pointer
 var csi []uint32        // subscribed IDs slice
 var csi_lock sync.Mutex // CAN subscribed IDs Mutex
 
+// initializes the CANBus Interface and enters an infinite
+// loop that reads can frames after that.
 func canStart(iface string) {
 	if dbg {
 		fmt.Printf("canbushandler: initializing CAN-Bus interface %s\n", iface)
@@ -64,6 +66,7 @@ func canStart(iface string) {
 	}
 }
 
+// Unsubscribe a CAN-ID
 func canSubscribe(id uint32) {
 	csi_lock.Lock()
 	csi = append(csi, id)
@@ -73,6 +76,7 @@ func canSubscribe(id uint32) {
 	}
 }
 
+// Subscribe to a CAN-ID
 func canUnsubscribe(id uint32) {
 	var tmp []uint32
 	csi_lock.Lock()
@@ -88,6 +92,7 @@ func canUnsubscribe(id uint32) {
 	}
 }
 
+// expects a CANFrame and sends it
 func canPublish(cf CAN.CANFrame) {
 	canUnsubscribe(cf.ID)
 	if dbg {

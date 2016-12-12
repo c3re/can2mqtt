@@ -7,6 +7,8 @@ import (
 
 var client MQTT.Client
 
+// uses the connectString to establish a connection to the MQTT
+// broker
 func mqttStart(connectString string) {
 	clientsettings := MQTT.NewClientOptions().AddBroker(connectString)
 	clientsettings.SetClientID("CAN2MQTT")
@@ -24,6 +26,7 @@ func mqttStart(connectString string) {
 	}
 }
 
+// subscribe to a new topic
 func mqttSubscribe(topic string) {
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
 		fmt.Printf("mqtthandler: error while subscribing: %s\n", topic, token.Error())
@@ -33,6 +36,7 @@ func mqttSubscribe(topic string) {
 	}
 }
 
+// unsubscribe a topic
 func mqttUnsubscribe(topic string) {
 	if token := client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
 		fmt.Printf("mqtthandler: Error while unsuscribing :%s\n", topic, token.Error())
@@ -42,6 +46,7 @@ func mqttUnsubscribe(topic string) {
 	}
 }
 
+// publish a new message
 func mqttPublish(topic string, payload string) {
 	if dbg {
 		fmt.Printf("mqtthandler: sending message: \"%s\" to topic: \"%s\"\n", payload, topic)
