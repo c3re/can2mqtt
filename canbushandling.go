@@ -11,7 +11,7 @@ var cb *CAN.CANBus
 var csi []uint32        // subscribed IDs slice
 var csi_lock sync.Mutex // CAN subscribed IDs Mutex
 
-func CANStart(iface string) {
+func canStart(iface string) {
 	if dbg {
 		fmt.Printf("canbushandler: initializing CAN-Bus interface %s\n", iface)
 	}
@@ -62,7 +62,7 @@ func CANStart(iface string) {
 	}
 }
 
-func CANSubscribe(id uint32) {
+func canSubscribe(id uint32) {
 	csi_lock.Lock()
 	csi = append(csi, id)
 	csi_lock.Unlock()
@@ -71,7 +71,7 @@ func CANSubscribe(id uint32) {
 	}
 }
 
-func CANUnsubscribe(id uint32) {
+func canUnsubscribe(id uint32) {
 	var tmp []uint32
 	csi_lock.Lock()
 	for _, elem := range csi {
@@ -86,8 +86,8 @@ func CANUnsubscribe(id uint32) {
 	}
 }
 
-func CANPublish(cf CAN.CANFrame) {
-	CANUnsubscribe(cf.ID)
+func canPublish(cf CAN.CANFrame) {
+	canUnsubscribe(cf.ID)
 	if dbg {
 		fmt.Println("canbushandler: sending CAN-Frame: ", cf)
 	}
@@ -98,5 +98,5 @@ func CANPublish(cf CAN.CANFrame) {
 		}
 		log.Fatal(err)
 	}
-	CANSubscribe(cf.ID)
+	canSubscribe(cf.ID)
 }

@@ -7,7 +7,7 @@ import (
 
 var client MQTT.Client
 
-func MQTTStart(connectString string) {
+func mqttStart(connectString string) {
 	clientsettings := MQTT.NewClientOptions().AddBroker(connectString)
 	clientsettings.SetClientID("CAN2MQTT")
 	clientsettings.SetDefaultPublishHandler(handleMQTT)
@@ -24,7 +24,7 @@ func MQTTStart(connectString string) {
 	}
 }
 
-func MQTTSubscribe(topic string) {
+func mqttSubscribe(topic string) {
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
 		fmt.Printf("mqtthandler: error while subscribing: %s\n", topic, token.Error())
 	}
@@ -33,7 +33,7 @@ func MQTTSubscribe(topic string) {
 	}
 }
 
-func MQTTUnsubscribe(topic string) {
+func mqttUnsubscribe(topic string) {
 	if token := client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
 		fmt.Printf("mqtthandler: Error while unsuscribing :%s\n", topic, token.Error())
 	}
@@ -42,15 +42,15 @@ func MQTTUnsubscribe(topic string) {
 	}
 }
 
-func MQTTPublish(topic string, payload string) {
+func mqttPublish(topic string, payload string) {
 	if dbg {
 		fmt.Printf("mqtthandler: sending message: \"%s\" to topic: \"%s\"\n", payload, topic)
 	}
-	MQTTUnsubscribe(topic)
+	mqttUnsubscribe(topic)
 	token := client.Publish(topic, 0, false, payload)
 	token.Wait()
 	if dbg {
 		fmt.Printf("mqtthandler: message was transmitted successfully!.\n")
 	}
-	MQTTSubscribe(topic)
+	mqttSubscribe(topic)
 }

@@ -49,16 +49,22 @@ func main() {
 			default:
 				i = len(os.Args)
 				conf = false
-				printHelp()	
+				printHelp()
 		}
 		}
 		if conf {
 			wg.Add(1)
-			go CANStart(ci) // epic parallel shit ;-)
-			MQTTStart(cs)
+			go canStart(ci) // epic parallel shit ;-)
+			mqttStart(cs)
 			readC2MPFromFile(c2mf)
 			wg.Wait()
 		}
+}
+
+// ExportedFunction is my first attempt to document
+// a function using go doc ;-)
+func ExportedFunction() {
+	fmt.Printf("testus")
 }
 
 func printHelp() {
@@ -84,12 +90,12 @@ func readC2MPFromFile(filename string) {
 			break
 		}
 		i, err := strconv.Atoi(record[0])
-		if IsInSlice(i, record[2]) {
+		if isInSlice(i, record[2]) {
 			panic("main: each ID and each topic is only allowed once!")
 		}
 		can2mqttPairs = append(can2mqttPairs, can2mqtt{i, record[1], record[2]})
-		MQTTSubscribe(record[2])
-		CANSubscribe(uint32(i))
+		mqttSubscribe(record[2])
+		canSubscribe(uint32(i))
 	}
 	if dbg {
 		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
@@ -100,7 +106,7 @@ func readC2MPFromFile(filename string) {
 	}
 }
 
-func IsInSlice(canId int, mqttTopic string) bool {
+func isInSlice(canId int, mqttTopic string) bool {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId || c2mp.mqttTopic == mqttTopic {
 			if dbg {

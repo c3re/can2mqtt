@@ -19,7 +19,7 @@ func handleCAN(cf CAN.CANFrame) {
 		fmt.Printf("receivehandler: converted String: %s\n", mqttPayload)
 	}
 	topic := getTopic(int(cf.ID))
-	MQTTPublish(topic, mqttPayload)
+	mqttPublish(topic, mqttPayload)
 	fmt.Printf("ID: %d len: %d data: %X -> topic: \"%s\" message: \"%s\"\n", cf.ID, cf.Len, cf.Data, topic, mqttPayload)
 }
 
@@ -32,6 +32,6 @@ func handleMQTT(cl MQTT.Client, msg MQTT.Message) {
 		fmt.Printf("receivehandler: received message: topic: %s, msg: %s\n", msg.Topic(), msg.Payload())
 	}
 	cf := convert2CAN(msg.Topic(), string(msg.Payload()))
-	CANPublish(cf)
+	canPublish(cf)
 	fmt.Printf("ID: %d len: %d data: %X <- topic: \"%s\" message: \"%s\"\n", cf.ID, cf.Len, cf.Data, msg.Topic(), msg.Payload())
 }
