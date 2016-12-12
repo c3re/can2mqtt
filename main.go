@@ -1,15 +1,14 @@
-// can2mqtt Bridge
-package main
+package can2mqtt
 
 import (
-	"bufio"                                // Reader
-	"encoding/csv"                         // CSV Management
-	"fmt"                                  // printfoo
-	"io"                                   // EOF const
-	"log"                                  // error management
-	"os"                                   // open files
-	"strconv"                              // parse strings
-	"sync"
+        "bufio"        // Reader
+        "encoding/csv" // CSV Management
+        "fmt"          // printfoo
+        "io"           // EOF const
+        "log"          // error management
+        "os"           // open files
+        "strconv"      // parse strings
+        "sync"
 )
 
 // can2mqtt is a struct that represents the internal type of
@@ -17,62 +16,56 @@ import (
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
-	canId      int
-	convMethod string
-	mqttTopic  string
+        canId      int
+        convMethod string
+        mqttTopic  string
 }
 
-var can2mqttPairs []can2mqtt 	// representation of can2mqtt.csv
-var dbg bool = false 		// verbose on of [-v]
-var ci string = "can0"		// the CAN-Interface [-c]
+var can2mqttPairs []can2mqtt           // representation of can2mqtt.csv
+var dbg bool = false                   // verbose on of [-v]
+var ci string = "can0"                 // the CAN-Interface [-c]
 var cs string = "tcp://localhost:1883" // mqtt-connectstring [-m]
-var c2mf string = "can2mqtt.csv" // path to the can2mqtt.csv [-f]
-var conf bool = true 		// represents wether a running conf
-				// is set or not
+var c2mf string = "can2mqtt.csv"       // path to the can2mqtt.csv [-f]
+var conf bool = true                   // represents wether a running conf
+// is set or not
 var wg sync.WaitGroup
 
-// main is the starting Point for the Program
-func main() {
-	for i := 1; i < len(os.Args); i++ {
-		switch os.Args[i] {
-			case "-v":
-				dbg = true
-			case "-c":
-				i++
-				ci = os.Args[i]
-			case "-m":
-				i++
-				cs = os.Args[i]
-			case "-f":
-				i++
-				c2mf = os.Args[i] 
-			default:
-				i = len(os.Args)
-				conf = false
-				printHelp()
-		}
-		}
-		if conf {
-			wg.Add(1)
-			go canStart(ci) // epic parallel shit ;-)
-			mqttStart(cs)
-			readC2MPFromFile(c2mf)
-			wg.Wait()
-		}
+// SetDbg decides wether there is really verbose output or
+// just standard information output. Default is false.
+func SetDbg(v bool) {
+	dbg = v
 }
 
-// ExportedFunction is my first attempt to document
-// a function using go doc ;-)
-func ExportedFunction() {
-	fmt.Printf("testus")
+// SetCi sets the CAN-Interface to use for the CAN side
+// of the bridge. Default is: can0.
+func SetCi(c string) {
+	ci = c
 }
 
-func printHelp() {
-	fmt.Printf("welcome to the CAN2MQTT bridge!\n\n")
-	fmt.Printf("Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h]\n")
-	fmt.Printf("<file>: a can2mqtt.csv file\n")
-	fmt.Printf("<CAN-Interface>: a CAN-Interface e.g. can0\n")
-	fmt.Printf("<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://localhost:1883\n")
+// SetC2mf expects a string which is a path to a can2mqtt.csv file
+// Default is: can2mqtt.csv
+func SetC2mf(f string) {
+	c2mf = f
+}
+
+// SetCs sets the MQTT connectstring which contains: protocol,
+// hostname and port. Default is: tcp://localhost:1883
+func SetCs(s string) {
+	cs = s
+}
+
+// Start is the function that should be called after debug-level
+// connectstring, can interface and can2mqtt file have been set.
+// Start takes care of everything that happens after that.
+// It starts the CAN-Bus connection and the MQTT-Connection. It
+// parses the can2mqtt.csv file and from there everything takes
+// its course...
+func Start() {
+		wg.Add(1)
+		go canStart(ci) // epic parallel shit ;-)
+		mqttStart(cs)
+		readC2MPFromFile(c2mf)
+		wg.Wait()
 }
 
 func readC2MPFromFile(filename string) {

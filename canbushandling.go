@@ -1,4 +1,6 @@
-package main
+// Package can2mqtt contains some tools for briding a CAN-Interface
+// and a mqtt-network
+package can2mqtt
 
 import (
 	"fmt"
