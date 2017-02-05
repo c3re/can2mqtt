@@ -4,6 +4,7 @@ import (
 	"fmt"
 	CAN "github.com/brendoncarroll/go-can"
 	"strconv"
+	"encoding/binary"
 )
 
 // convert2CAN does the following:
@@ -28,11 +29,16 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		}
 		data[0] = dec2byte(payload)
 		len = 1
-	} else if convertMethod == "openorclosed2oneorzero" {
+	} else if convertMethod == "uint322ascii" {
 		if dbg {
-			fmt.Printf("convertfunctions: using convertmodus dec2byte (reverse of %s)\n", convertMethod)
+			fmt.Printf("convertfunctions: using convertmode ascii2uint32(reverse of %s)\n", convertMethod)
 		}
-		data, len = oneorzero2openorclosed(payload)
+		tmp := ascii2uint32(payload)
+		data[0] = tmp[0]
+		data[1] = tmp[1]
+		data[2] = tmp[2]
+		data[3] = tmp[3]
+		len = 4
 	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmode %s not found. using fallback ascii2byte\n", convertMethod)
@@ -62,11 +68,11 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 			fmt.Printf("convertfunctions: using convertmode byte2dec\n")
 		}
 		return byte2dec(payload[0])
-	} else if convertMethod == "openorclosed2oneorzero" {
+	} else if convertMethod == "uint322ascii" {
 		if dbg {
-			fmt.Printf("convertfunctions: using convertmode byte2dec\n")
+			fmt.Printf("convertfunctions: using convertmode uint322ascii\n")
 		}
-		return openorclosed2oneorzero(payload[0])
+		return uint322ascii(payload[0:3])
 	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmode %s not found. using fallback bytes2ascii\n", convertMethod)
@@ -102,23 +108,24 @@ func dec2byte(payload string) byte {
 	}
 	return byte(tmp)
 }
-
-// openorclosed2oneorzero. takes one byte with a "o" for the return of "1"
-// or everything else for a return of "0"
-// 1 -> opened
-// 0 and everything else -> closed
-func openorclosed2oneorzero(payload byte) string {
-	if string(payload) == "o" {
-		return "1"
-	} else {
-		return "0"
+//######################################################################
+//#			UINT322ASCII				       #
+//######################################################################
+// uint322ascii takes 4 bytes and returns a string with a numeric
+// decimal interpretation of the found data as ascii-string
+func  uint322ascii (payload []byte) string {
+	if len (payload) != 4 {
+		return "Err in CAN-Frame, data must be 4 bytes."
 	}
+	data := binary.BigEndian.Uint32(payload)
+	return strconv.FormatUint(uint64(data), 10) 
 }
 
-func oneorzero2openorclosed(payload string) ([8]byte, uint32) {
-	if payload == "1" {
-		return ascii2bytes("open   ")
-	} else {
-		return ascii2bytes("closed ")
-	}
+func ascii2uint32 (payload string) []byte {
+	tmp, _ := strconv.Atoi(payload)
+	number := uint32(tmp)
+	a := make([]byte, 4)
+	binary.LittleEndian.PutUint32(a, number)
+	return a
 }
+//########################################################################
