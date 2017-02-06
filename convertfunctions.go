@@ -61,7 +61,6 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode bytes2asciii\n")
 		}
-
 		return bytes2ascii(uint32(length), payload)
 	} else if convertMethod == "byte2dec" {
 		if dbg {
@@ -81,7 +80,10 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 	}
 }
 
-// some convertmodes
+//######################################################################
+//#				NONE				       #	
+//######################################################################
+
 func bytes2ascii(length uint32, payload [8]byte) string {
 	return string(payload[:length])
 }
@@ -95,6 +97,9 @@ func ascii2bytes(payload string) ([8]byte, uint32) {
 	return returner, i
 }
 
+//######################################################################
+//#			UINT82ASCII				       #	
+//######################################################################
 // byte2dec takes exactly one byte and returns a string with a
 // numeric decimal interpretation of the found data
 func byte2dec(payload byte) string {
