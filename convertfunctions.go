@@ -176,7 +176,7 @@ func  uint162ascii (payload []byte) string {
 	if len (payload) != 2 {
 		return "Err in CAN-Frame, data must be 2 bytes."
 	}
-	data := binary.BigEndian.Uint16(payload)
+	data := binary.LittleEndian.Uint16(payload)
 	return strconv.FormatUint(uint64(data), 10)
 }
 
@@ -184,7 +184,7 @@ func ascii2uint16 (payload string) []byte {
 	tmp, _ := strconv.Atoi(payload)
 	number := uint16(tmp)
 	a := make([]byte, 2)
-	binary.BigEndian.PutUint16(a, number)
+	binary.LittleEndian.PutUint16(a, number)
 	return a
 }
 //########################################################################
@@ -197,7 +197,7 @@ func  uint322ascii (payload []byte) string {
 	if len (payload) != 4 {
 		return "Err in CAN-Frame, data must be 4 bytes."
 	}
-	data := binary.BigEndian.Uint32(payload)
+	data := binary.LittleEndian.Uint32(payload)
 	return strconv.FormatUint(uint64(data), 10)
 }
 
@@ -205,7 +205,7 @@ func ascii2uint32 (payload string) []byte {
 	tmp, _ := strconv.Atoi(payload)
 	number := uint32(tmp)
 	a := make([]byte, 4)
-	binary.BigEndian.PutUint32(a, number)
+	binary.LittleEndian.PutUint32(a, number)
 	return a
 }
 //########################################################################
@@ -218,7 +218,7 @@ func  uint642ascii (payload []byte) string {
 	if len (payload) != 8 {
 		return "Err in CAN-Frame, data must be 8 bytes."
 	}
-	data := binary.BigEndian.Uint64(payload)
+	data := binary.LittleEndian.Uint64(payload)
 	return strconv.FormatUint(uint64(data), 10)
 }
 
@@ -226,7 +226,7 @@ func ascii2uint64 (payload string) []byte {
 	tmp, _ := strconv.Atoi(payload)
 	number := uint64(tmp)
 	a := make([]byte, 8)
-	binary.BigEndian.PutUint64(a, number)
+	binary.LittleEndian.PutUint64(a, number)
 	return a
 }
 //########################################################################
