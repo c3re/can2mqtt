@@ -5,6 +5,7 @@ import (
 	CAN "github.com/brendoncarroll/go-can"
 	"strconv"
 	"encoding/binary"
+	"encoding/hex"
 	"strings"
 )
 
@@ -78,6 +79,15 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		data[6] = tmp[2]
 		data[7] = tmp[3]
 		len = 8
+	} else if convertMethod == "bytecolor2colorcode" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode colorcode2bytecolor(reverse of %s)\n", convertMethod)
+		}
+		tmp := colorcode2bytecolor(payload)
+		data[0] = tmp[0]
+		data[1] = tmp[1]
+		data[2] = tmp[2]
+		len = 3 
 	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
@@ -126,6 +136,12 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 			fmt.Printf("convertfunctions: using convertmode 2uint322ascii\n")
 		}
 		return uint322ascii(payload[0:3]) + " " + uint322ascii(payload[4:7])
+	} else if convertMethod == "bytecolor2colorcode" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode bytecolor2colorcode\n")
+		}
+		return bytecolor2colorcode(payload[0:2])
+
 	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
@@ -230,3 +246,25 @@ func ascii2uint64 (payload string) []byte {
 	return a
 }
 //########################################################################
+//######################################################################
+//#             bytecolor2colorcode
+//######################################################################
+// bytecolor2colorcode is a convertmode that converts between the binary
+// 3 byte representation of a color and a string representation of a color
+// as we know it (for example in html #00ff00 is green)
+func  bytecolor2colorcode (payload []byte) string {
+        colorstring := hex.EncodeToString(payload)
+        return colorstring
+}
+
+func colorcode2bytecolor (payload string) []byte {
+        var a []byte
+        var err error
+        a,err = hex.DecodeString(payload)
+        if err != nil {
+        return []byte {0,0,0}
+        }
+        return a 
+}
+//########################################################################
+
