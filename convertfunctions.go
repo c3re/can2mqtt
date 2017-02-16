@@ -254,13 +254,13 @@ func ascii2uint64 (payload string) []byte {
 // as we know it (for example in html #00ff00 is green)
 func  bytecolor2colorcode (payload []byte) string {
         colorstring := hex.EncodeToString(payload)
-        return colorstring
+        return "#" + colorstring
 }
 
 func colorcode2bytecolor (payload string) []byte {
-        var a []byte
+	var a []byte
         var err error
-        a,err = hex.DecodeString(payload)
+        a,err = hex.DecodeString(strings.Replace(payload, "#", "", -1))
         if err != nil {
         return []byte {0,0,0}
         }
