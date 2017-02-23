@@ -54,3 +54,5 @@ On the can2mqtt way it takes 1, 2, 4 or 8 byte and interprets it as an uint of t
 This one is a bit special but all it does is that it takes 8 bytes from the CAN-Bus and parses two uint32s out of it and sends them in a string representation to MQTT. The two numbers are seperated with a simple space(" "). MQTT2CAN-wise it takes two string representations of numbers and converts them to 8 bytes representing them as 2 uint32.
 ### bytecolor2colorcode
 Converts an bytearray of 3 bytes to hexadecimal colorcode
+### pixelbin2ascii
+This mode was designed to adress colorized pixels. MQTT-wise you can insert a string like "<0-255> #RRGGBB" wich will be converted to 4 byte on the CAN-BUS the first byte will be the number of the LED 0-255 and bytes 1, 2, 3 are the color of red, green and blue.

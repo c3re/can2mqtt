@@ -87,7 +87,19 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		data[0] = tmp[0]
 		data[1] = tmp[1]
 		data[2] = tmp[2]
-		len = 3 
+		len = 3
+	} else if convertMethod == "pixelbin2ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode ascii2pixelbin(reverse of %s)\n", convertMethod)
+		}
+		num_and_color := strings.Split(payload, " ")
+		bin_num := ascii2uint8(num_and_color[0])
+		tmp := colorcode2bytecolor(num_and_color[1])
+		data[0] = byte(bin_num)
+		data[1] = tmp[0]
+		data[2] = tmp[1]
+		data[3] = tmp[2]
+		len = 4
 	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
@@ -136,6 +148,11 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 			fmt.Printf("convertfunctions: using convertmode 2uint322ascii\n")
 		}
 		return uint322ascii(payload[0:3]) + " " + uint322ascii(payload[4:7])
+	} else if convertMethod == "pixelbin2ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode pixelbin2ascii\n")
+		}
+		return uint82ascii(payload[0]) + " " + bytecolor2colorcode(payload[1:4])
 	} else if convertMethod == "bytecolor2colorcode" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode bytecolor2colorcode\n")
