@@ -132,22 +132,22 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode uint162ascii\n")
 		}
-		return uint162ascii(payload[0:1])
+		return uint162ascii(payload[0:2])
 	} else if convertMethod == "uint322ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode uint322ascii\n")
 		}
-		return uint322ascii(payload[0:3])
+		return uint322ascii(payload[0:4])
 	} else if convertMethod == "uint642ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode uint642ascii\n")
 		}
-		return uint642ascii(payload[0:7])
+		return uint642ascii(payload[0:8])
 	} else if convertMethod == "2uint322ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode 2uint322ascii\n")
 		}
-		return uint322ascii(payload[0:3]) + " " + uint322ascii(payload[4:7])
+		return uint322ascii(payload[0:4]) + " " + uint322ascii(payload[4:8])
 	} else if convertMethod == "pixelbin2ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode pixelbin2ascii\n")
@@ -194,11 +194,7 @@ func uint82ascii(payload byte) string {
 }
 
 func ascii2uint8(payload string) byte {
-	tmp, err := strconv.ParseInt(payload, 8, 10)
-	if err != nil {
-		return byte(255)
-	}
-	return byte(tmp)
+	return ascii2uint16(payload)[0]
 }
 //######################################################################
 //#			UINT162ASCII				       #
