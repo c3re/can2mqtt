@@ -29,7 +29,7 @@ func mqttStart(connectString string) {
 // subscribe to a new topic
 func mqttSubscribe(topic string) {
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		fmt.Printf("mqtthandler: error while subscribing: %s\n", topic, token.Error())
+		fmt.Printf("mqtthandler: error while subscribing: %s\n", topic)
 	}
 	if dbg {
 		fmt.Printf("mqtthandler: successfully subscribed: %s\n", topic)
@@ -39,7 +39,7 @@ func mqttSubscribe(topic string) {
 // unsubscribe a topic
 func mqttUnsubscribe(topic string) {
 	if token := client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
-		fmt.Printf("mqtthandler: Error while unsuscribing :%s\n", topic, token.Error())
+		fmt.Printf("mqtthandler: Error while unsuscribing :%s\n", topic)
 	}
 	if dbg {
 		fmt.Printf("mqtthandler: successfully unsubscribed %s\n", topic)
