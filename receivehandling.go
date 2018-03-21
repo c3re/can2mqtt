@@ -14,11 +14,11 @@ func handleCAN(cf CAN.CANFrame) {
 	if dbg {
 		fmt.Printf("receivehandler: received CANFrame: ID: %d, len: %d, payload %s\n", cf.ID, cf.Len, cf.Data)
 	}
-	mqttPayload := convert2MQTT(int(cf.ID), int(cf.Len), cf.Data)
+	mqttPayload := convert2MQTT(uint32(cf.ID), int(cf.Len), cf.Data)
 	if dbg {
 		fmt.Printf("receivehandler: converted String: %s\n", mqttPayload)
 	}
-	topic := getTopic(int(cf.ID))
+	topic := getTopic(uint32(cf.ID))
 	mqttPublish(topic, mqttPayload)
 	fmt.Printf("ID: %d len: %d data: %X -> topic: \"%s\" message: \"%s\"\n", cf.ID, cf.Len, cf.Data, topic, mqttPayload)
 }
