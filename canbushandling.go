@@ -36,6 +36,7 @@ func canStart(iface string) {
 	}
 	for {
 		cb.Read(&cf)
+    cf.ID &^= 0x80000000  // The Extended IDs do get a flag bit which gets masked here
 		if dbg {
 			fmt.Printf("canbushandler: received CAN-Frame: (ID:%d). Locking mutex\n", cf.ID)
 		}
