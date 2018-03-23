@@ -116,7 +116,7 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 // 3. executing conversion
 // 4. building a string
 // 5. return
-func convert2MQTT(id uint32, length int, payload [8]byte) string {
+func convert2MQTT(id int, length int, payload [8]byte) string {
 	convertMethod := getConvId(id)
 	if convertMethod == "none" {
 		if dbg {

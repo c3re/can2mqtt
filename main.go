@@ -16,7 +16,7 @@ import (
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
-	canId      uint32
+	canId      int
 	convMethod string
 	mqttTopic  string
 }
@@ -84,13 +84,13 @@ func readC2MPFromFile(filename string) {
 		if err == io.EOF {
 			break
 		}
-		u, err := strconv.ParseUint(record[0], 10, 64)
-		if isInSlice(uint32(u), record[2]) {
+		i, err := strconv.Atoi(record[0])
+		if isInSlice(i, record[2]) {
 			panic("main: each ID and each topic is only allowed once!")
 		}
-		can2mqttPairs = append(can2mqttPairs, can2mqtt{uint32(u), record[1], record[2]})
+		can2mqttPairs = append(can2mqttPairs, can2mqtt{i, record[1], record[2]})
 		mqttSubscribe(record[2])
-		canSubscribe(uint32(u))
+		canSubscribe(uint32(i))
 	}
 	if dbg {
 		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
@@ -102,7 +102,7 @@ func readC2MPFromFile(filename string) {
 }
 
 // check function to check if a topic or an ID is in the slice
-func isInSlice(canId uint32, mqttTopic string) bool {
+func isInSlice(canId int, mqttTopic string) bool {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId || c2mp.mqttTopic == mqttTopic {
 			if dbg {
@@ -115,7 +115,7 @@ func isInSlice(canId uint32, mqttTopic string) bool {
 }
 
 // get the corresponding topic for an ID
-func getTopic(canId uint32) string {
+func getTopic(canId int) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId {
 			return c2mp.mqttTopic
@@ -137,18 +137,18 @@ func getConvTopic(topic string) string {
 }
 
 // get the correspondig ID for a given topic
-func getId(mqttTopic string) uint32 {
+func getId(mqttTopic string) int {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.mqttTopic == mqttTopic {
 			return c2mp.canId
 		}
 	}
 	// Fehlerfall
-	return 0
+	return -1
 }
 
 // get the convertode for a given ID
-func getConvId(canId uint32) string {
+func getConvId(canId int) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId {
 			return c2mp.convMethod
