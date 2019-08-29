@@ -1,0 +1,32 @@
+Source: can2mqtt
+Section: devel
+Priority: optional
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders: Gerrit Beine <mail@gerritbeine.de>
+Build-Depends: debhelper (>= 11),
+               dh-golang,
+               golang-any,
+               golang-github-eclipse-paho.mqtt.golang-dev
+Standards-Version: 4.2.1
+Homepage: https://github.com/gbeine/can2mqtt
+Vcs-Browser: https://salsa.debian.org/go-team/packages/can2mqtt
+Vcs-Git: https://salsa.debian.org/go-team/packages/can2mqtt.git
+XS-Go-Import-Path: github.com/gbeine/can2mqtt
+Testsuite: autopkgtest-pkg-go
+
+Package: can2mqtt
+Architecture: any
+Built-Using: ${misc:Built-Using}
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: CAN-Bus to MQTT-Bridge
+ can2mqtt can2mqtt is a small piece of software written in Go. Its
+ purpose is to be a bridge between a CAN-Bus and a MQTT-Broker. Those
+ are completely different worlds but they have similiaritys in the way
+ they are built. I think i don't have to speak about the differences
+ so i will just pick up the similiarities: In the CAN-world you have
+ so called CAN-Frames. Each CAN-Frame can contain up to eight bytes of
+ payload and CAN-Frame has an ID. In the MQTT-world you have topics and
+ messages. Each message has a specific topic. As you can see it should be
+ possible to map CAN-IDs to MQTT-Topics and their respective payload to
+ messages.
