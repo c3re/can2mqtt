@@ -61,18 +61,18 @@ func SetCs(s string) {
 // parses the can2mqtt.csv file and from there everything takes
 // its course...
 func Start() {
-        fmt.Println("Starting can2mqtt")
-        fmt.Println()
-        fmt.Println("MQTT-Config:  ", cs)
-        fmt.Println("CAN-Config:   ", ci)
-        fmt.Println("can2mqtt.csv: ", c2mf)
-        fmt.Print("Debug-Mode:    ")
-        if dbg {
-          fmt.Println("yes")
-        } else {
-          fmt.Println("no")
-        }
-        fmt.Println()
+	fmt.Println("Starting can2mqtt")
+	fmt.Println()
+	fmt.Println("MQTT-Config:  ", cs)
+	fmt.Println("CAN-Config:   ", ci)
+	fmt.Println("can2mqtt.csv: ", c2mf)
+	fmt.Print("Debug-Mode:    ")
+	if dbg {
+		fmt.Println("yes")
+	} else {
+		fmt.Println("no")
+	}
+	fmt.Println()
 	wg.Add(1)
 	go canStart(ci) // epic parallel shit ;-)
 	mqttStart(cs)
