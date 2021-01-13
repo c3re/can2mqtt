@@ -94,7 +94,7 @@ func readC2MPFromFile(filename string) {
 	}
 	if dbg {
 		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
-		fmt.Printf("main: CAN-ID\t\t conversion mode\t\tMQTT-topic")
+		fmt.Printf("main: CAN-ID\t\t conversion mode\t\tMQTT-topic\n")
 		for _, c2mp := range can2mqttPairs {
 			fmt.Printf("main: %d\t\t%s\t\t%s\n", c2mp.canId, c2mp.convMethod, c2mp.mqttTopic)
 		}
