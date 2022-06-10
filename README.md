@@ -22,7 +22,9 @@ Where can2mqtt.csv is the file for the configuration of can and mqtt pairs, can-
 ```
 can2mqtt -f /etc/can2mqtt.csv -c can0 -m tcp://127.0.0.1:1883
 ```
-
+## Screenshot
+Here you can see can2mqtt in action:
+![can2mqtt screenshot](screenshot.png "can2mqtt in action")
 ## can2mqtt.csv
 The file can2mqtt.csv has three columns. In the first column you need to specify the CAN-ID as a decimal number. In the second column you have to specify the convert-mode. You can find a list of available convert-modes below. In the last column you have to specify the MQTT-Topic. Each CAN-ID and each MQTT-Topic is allowed to appear only once in the whole file.
 
