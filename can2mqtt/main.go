@@ -40,5 +40,5 @@ func printHelp() {
 	fmt.Printf("Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h]\n")
 	fmt.Printf("<file>: a can2mqtt.csv file\n")
 	fmt.Printf("<CAN-Interface>: a CAN-Interface e.g. can0\n")
-	fmt.Printf("<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://localhost:1883\n")
+        fmt.Printf("<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://[user:pass@]localhost:1883\n")
 }
