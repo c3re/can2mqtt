@@ -6,9 +6,9 @@ can2mqtt is a small piece of software written in Go. Its purpose is to be a brid
 ## Installation
 You need to have go installed. After that you should be able to get can2mqtt to run with the following commands:
 ```
-$ mkdir go
-$ export GOPATH=go
-$ go get github.com/c3re/can2mqtt
+$ mkdir ~/go
+$ export GOPATH=~/go
+$ go install github.com/c3re/can2mqtt/can2mqtt@latest
 ```
 After that you should have a runnable binary under $GOPATH/bin/ called can2mqtt.
  
