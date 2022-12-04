@@ -4,33 +4,33 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	CAN "github.com/brendoncarroll/go-can"
+	"github.com/brutella/can"
 	"strconv"
 	"strings"
 )
 
 // convert2CAN does the following:
 // 1. receive topic and payload
-// 2. use topic to examine corresponding cconvertmode and CAN-ID
+// 2. use topic to examine corresponding convertmode and CAN-ID
 // 3. execute conversion
 // 4. build CANFrame
 // 5. returning the CANFrame
-func convert2CAN(topic, payload string) CAN.CANFrame {
+func convert2CAN(topic, payload string) can.Frame {
 	convertMethod := getConvTopic(topic)
-	var Id uint32 = uint32(getId(topic))
+	var Id = uint32(getId(topic))
 	var data [8]byte
-	var len uint32
+	var length uint8
 	if convertMethod == "none" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode none (reverse of %s)\n", convertMethod)
 		}
-		data, len = ascii2bytes(payload)
+		data, length = ascii2bytes(payload)
 	} else if convertMethod == "uint82ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii2uint8 (reverse of %s)\n", convertMethod)
 		}
 		data[0] = ascii2uint8(payload)
-		len = 1
+		length = 1
 	} else if convertMethod == "uint162ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii2uint16(reverse of %s)\n", convertMethod)
@@ -38,7 +38,7 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		tmp := ascii2uint16(payload)
 		data[0] = tmp[0]
 		data[1] = tmp[1]
-		len = 2
+		length = 2
 	} else if convertMethod == "uint322ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii2uint32(reverse of %s)\n", convertMethod)
@@ -48,7 +48,7 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		data[1] = tmp[1]
 		data[2] = tmp[2]
 		data[3] = tmp[3]
-		len = 4
+		length = 4
 	} else if convertMethod == "uint642ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii2uint64(reverse of %s)\n", convertMethod)
@@ -62,7 +62,7 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		data[5] = tmp[5]
 		data[6] = tmp[6]
 		data[7] = tmp[7]
-		len = 8
+		length = 8
 	} else if convertMethod == "2uint322ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii22uint32(reverse of %s)\n", convertMethod)
@@ -78,7 +78,7 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		data[5] = tmp[1]
 		data[6] = tmp[2]
 		data[7] = tmp[3]
-		len = 8
+		length = 8
 	} else if convertMethod == "bytecolor2colorcode" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode colorcode2bytecolor(reverse of %s)\n", convertMethod)
@@ -87,27 +87,27 @@ func convert2CAN(topic, payload string) CAN.CANFrame {
 		data[0] = tmp[0]
 		data[1] = tmp[1]
 		data[2] = tmp[2]
-		len = 3
+		length = 3
 	} else if convertMethod == "pixelbin2ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii2pixelbin(reverse of %s)\n", convertMethod)
 		}
-		num_and_color := strings.Split(payload, " ")
-		bin_num := ascii2uint8(num_and_color[0])
-		tmp := colorcode2bytecolor(num_and_color[1])
-		data[0] = byte(bin_num)
+		numAndColor := strings.Split(payload, " ")
+		binNum := ascii2uint8(numAndColor[0])
+		tmp := colorcode2bytecolor(numAndColor[1])
+		data[0] = binNum
 		data[1] = tmp[0]
 		data[2] = tmp[1]
 		data[3] = tmp[2]
-		len = 4
+		length = 4
 	} else {
 		if dbg {
 			fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
 		}
-		data, len = ascii2bytes(payload)
+		data, length = ascii2bytes(payload)
 	}
-	mycf := CAN.CANFrame{ID: Id, Len: len, Data: data}
-	return mycf
+	myFrame := can.Frame{ID: Id, Length: length, Data: data}
+	return myFrame
 }
 
 // convert2MQTT does the following
@@ -175,18 +175,18 @@ func bytes2ascii(length uint32, payload [8]byte) string {
 	return string(payload[:length])
 }
 
-func ascii2bytes(payload string) ([8]byte, uint32) {
+func ascii2bytes(payload string) ([8]byte, uint8) {
 	var returner [8]byte
-	var i uint32 = 0
+	var i uint8 = 0
 	for ; int(i) < len(payload) && i < 8; i++ {
 		returner[i] = payload[i]
 	}
 	return returner, i
 }
 
-//######################################################################
-//#			UINT82ASCII				       #
-//######################################################################
+// ######################################################################
+// #			UINT82ASCII				       #
+// ######################################################################
 // uint82ascii takes exactly one byte and returns a string with a
 // numeric decimal interpretation of the found data
 func uint82ascii(payload byte) string {
@@ -197,9 +197,9 @@ func ascii2uint8(payload string) byte {
 	return ascii2uint16(payload)[0]
 }
 
-//######################################################################
-//#			UINT162ASCII				       #
-//######################################################################
+// ######################################################################
+// #			UINT162ASCII				       #
+// ######################################################################
 // uint162ascii takes 2 bytes and returns a string with a numeric
 // decimal interpretation of the found data as ascii-string
 func uint162ascii(payload []byte) string {
@@ -218,10 +218,10 @@ func ascii2uint16(payload string) []byte {
 	return a
 }
 
-//########################################################################
-//######################################################################
-//#			UINT322ASCII				       #
-//######################################################################
+// ########################################################################
+// ######################################################################
+// #			UINT322ASCII				       #
+// ######################################################################
 // uint322ascii takes 4 bytes and returns a string with a numeric
 // decimal interpretation of the found data as ascii-string
 func uint322ascii(payload []byte) string {
@@ -240,10 +240,10 @@ func ascii2uint32(payload string) []byte {
 	return a
 }
 
-//########################################################################
-//######################################################################
-//#			UINT642ASCII				       #
-//######################################################################
+// ########################################################################
+// ######################################################################
+// #			UINT642ASCII				       #
+// ######################################################################
 // uint642ascii takes 8 bytes and returns a string with a numeric
 // decimal interpretation of the found data as ascii-string
 func uint642ascii(payload []byte) string {
@@ -251,7 +251,7 @@ func uint642ascii(payload []byte) string {
 		return "Err in CAN-Frame, data must be 8 bytes."
 	}
 	data := binary.LittleEndian.Uint64(payload)
-	return strconv.FormatUint(uint64(data), 10)
+	return strconv.FormatUint(data, 10)
 }
 
 func ascii2uint64(payload string) []byte {
@@ -262,10 +262,10 @@ func ascii2uint64(payload string) []byte {
 	return a
 }
 
-//########################################################################
-//######################################################################
-//#             bytecolor2colorcode
-//######################################################################
+// ########################################################################
+// ######################################################################
+// #             bytecolor2colorcode
+// ######################################################################
 // bytecolor2colorcode is a convertmode that converts between the binary
 // 3 byte representation of a color and a string representation of a color
 // as we know it (for example in html #00ff00 is green)

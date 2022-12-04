@@ -1,77 +1,68 @@
-// Package can2mqtt contains some tools for briding a CAN-Interface
+// Package can2mqtt contains some tools for bridging a CAN-Interface
 // and a mqtt-network
 package can2mqtt
 
 import (
 	"fmt"
-	CAN "github.com/brendoncarroll/go-can"
+	"github.com/brutella/can"
 	"log"
 	"sync"
 )
 
-var cb *CAN.CANBus      // our CANBus pointer
-var csi []uint32        // subscribed IDs slice
-var csi_lock sync.Mutex // CAN subscribed IDs Mutex
+var csi []uint32       // subscribed IDs slice
+var csiLock sync.Mutex // CAN subscribed IDs Mutex
+var bus *can.Bus       // CAN-Bus pointer
 
 // initializes the CANBus Interface and enters an infinite
-// loop that reads can frames after that.
-func canStart(iface string) {
-	if dbg {
-		fmt.Printf("canbushandler: initializing CAN-Bus interface %s\n", iface)
-	}
+// loop that reads CAN-frames after that.
+func canStart(canInterface string) {
+
 	var err error
-	cb, err = CAN.NewCANBus(iface)
+	if dbg {
+		fmt.Printf("canbushandler: initializing CAN-Bus interface %s\n", canInterface)
+	}
+	bus, err = can.NewBusForInterfaceWithName(canInterface)
 	if err != nil {
 		if dbg {
-			fmt.Printf("canbushandler: error while activating CAN-Bus interface: %s\n", iface)
+			fmt.Printf("canbushandler: error while activating CAN-Bus interface: %s\n", canInterface)
 		}
 		log.Fatal(err)
 	}
-	if dbg {
-		fmt.Printf("canbushandler: successfully initialized CAN-Bus interface %s.\n", iface)
-	}
-	var cf CAN.CANFrame
-	if dbg {
-		fmt.Printf("canbushadler: entering infinite loop\n")
-	}
-	for {
-		cb.Read(&cf)
-		cf.ID &= 0x1FFFFFFF // The Extended IDs do get a flag bit which gets masked here
+	bus.SubscribeFunc(handleCANFrame)
+	err = bus.ConnectAndPublish()
+	if err != nil {
 		if dbg {
-			fmt.Printf("canbushandler: received CAN-Frame: (ID:%x). Locking mutex\n", cf.ID)
+			fmt.Printf("canbushandler: error while activating CAN-Bus interface: %s\n", canInterface)
 		}
-		csi_lock.Lock()
-		if dbg {
-			fmt.Printf("canbushandler: mutex was locked successfully.\n")
-		}
-		var id_sub = false // indicates, wether the id was subscribed or not
-		for _, i := range csi {
-			if i == cf.ID {
-				if dbg {
-					fmt.Printf("canbushandler: ID %d is in subscribed list, calling receivehadler.\n", cf.ID)
-				}
-				go handleCAN(cf)
-				id_sub = true
-				break
-			}
-		}
-		if !id_sub {
+		log.Fatal(err)
+	}
+}
+
+func handleCANFrame(frame can.Frame) {
+	frame.ID &= 0x1FFFFFFF // discard flags, we are only interested in the ID
+	var idSub = false      // indicates, whether the id was subscribed or not
+	for _, i := range csi {
+		if i == frame.ID {
 			if dbg {
-				fmt.Printf("canbushandler: ID:%d was not subscribed. /dev/nulled that frame...\n", cf.ID)
+				fmt.Printf("canbushandler: ID %d is in subscribed list, calling receivehadler.\n", frame.ID)
 			}
+			go handleCAN(frame)
+			idSub = true
+			break
 		}
-		csi_lock.Unlock()
+	}
+	if !idSub {
 		if dbg {
-			fmt.Printf("canbushandler: unlocked mutex.\n")
+			fmt.Printf("canbushandler: ID:%d was not subscribed. /dev/nulled that frame...\n", frame.ID)
 		}
 	}
 }
 
 // Unsubscribe a CAN-ID
 func canSubscribe(id uint32) {
-	csi_lock.Lock()
+	csiLock.Lock()
 	csi = append(csi, id)
-	csi_lock.Unlock()
+	csiLock.Unlock()
 	if dbg {
 		fmt.Printf("canbushandler: mutex lock+unlock successful. subscribed to ID:%d\n", id)
 	}
@@ -80,31 +71,34 @@ func canSubscribe(id uint32) {
 // Subscribe to a CAN-ID
 func canUnsubscribe(id uint32) {
 	var tmp []uint32
-	csi_lock.Lock()
+	csiLock.Lock()
 	for _, elem := range csi {
 		if elem != id {
 			tmp = append(tmp, elem)
 		}
 	}
 	csi = tmp
-	csi_lock.Unlock()
+	csiLock.Unlock()
 	if dbg {
 		fmt.Printf("canbushandler: mutex lock+unlock successful. unsubscribed ID:%d\n", id)
 	}
 }
 
 // expects a CANFrame and sends it
-func canPublish(cf CAN.CANFrame) {
-	canUnsubscribe(cf.ID)
+func canPublish(frame can.Frame) {
 	if dbg {
-		fmt.Println("canbushandler: sending CAN-Frame: ", cf)
+		fmt.Println("canbushandler: sending CAN-Frame: ", frame)
 	}
-	err := cb.Write(&cf)
+	// Check if ID is using more than 11-Bits:
+	if frame.ID >= 0x800 {
+		// if so, enable extended frame format
+		frame.ID |= 0x80000000
+	}
+	err := bus.Publish(frame)
 	if err != nil {
 		if dbg {
 			fmt.Printf("canbushandler: error while transmitting the CAN-Frame.\n")
 		}
 		log.Fatal(err)
 	}
-	canSubscribe(cf.ID)
 }
