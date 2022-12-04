@@ -38,3 +38,4 @@
 302,none,huette/clubraum/000/drucki/actuators/print_text
 303,none,huette/all/000/lampe_aussen_cmnd/actuators/power
 304,uint322ascii,huette/all/000/electr_meter_huette/sensors/meter_reading
+523453525,none,largeidtest
