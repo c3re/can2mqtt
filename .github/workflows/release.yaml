@@ -1,0 +1,25 @@
+on:
+  release:
+    types: [created]
+
+jobs:
+  release-binaries:
+    name: release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin]
+        goarch: [amd64, arm64, arm]
+        exclude:
+          - goarch: darwin
+            goos: arm
+    steps:
+    - uses: actions/checkout@v3
+    - uses: wangyoucao577/go-release-action@v1.30
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: 1.19
+        binary_name: can2mqtt
+        compress_assets: false
