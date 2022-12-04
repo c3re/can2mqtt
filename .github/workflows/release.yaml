@@ -11,8 +11,8 @@ jobs:
         goos: [linux, darwin]
         goarch: [amd64, arm64, arm]
         exclude:
-          - goarch: darwin
-            goos: arm
+          - goos: darwin
+            goarch: arm
     steps:
     - uses: actions/checkout@v3
     - uses: wangyoucao577/go-release-action@v1.30
