@@ -24,3 +24,5 @@ jobs:
         binary_name: can2mqtt
         compress_assets: false
         project_path: can2mqtt
+      env:
+        CGO_ENABLED: 0
