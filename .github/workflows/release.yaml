@@ -23,3 +23,4 @@ jobs:
         goversion: 1.19
         binary_name: can2mqtt
         compress_assets: false
+        project_path: can2mqtt
