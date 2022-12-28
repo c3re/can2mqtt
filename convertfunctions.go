@@ -25,6 +25,14 @@ func convert2CAN(topic, payload string) can.Frame {
 			fmt.Printf("convertfunctions: using convertmode none (reverse of %s)\n", convertMethod)
 		}
 		data, length = ascii2bytes(payload)
+	} else if convertMethod == "16bool2ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode ascii2bool (reverse of %s)\n", convertMethod)
+		}
+		tmp := ascii2bool(payload)
+		data[0] = tmp[0]
+		data[1] = tmp[1]
+		length = 2
 	} else if convertMethod == "uint82ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii2uint8 (reverse of %s)\n", convertMethod)
@@ -79,6 +87,60 @@ func convert2CAN(topic, payload string) can.Frame {
 		data[6] = tmp[2]
 		data[7] = tmp[3]
 		length = 8
+	} else if convertMethod == "4uint162ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode ascii24uint16(reverse of %s)\n", convertMethod)
+		}
+		nums := strings.Split(payload, " ")
+		tmp := ascii2uint16(nums[0])
+		data[0] = tmp[0]
+		data[1] = tmp[1]
+		tmp = ascii2uint16(nums[1])
+		data[2] = tmp[0]
+		data[3] = tmp[1]
+		tmp = ascii2uint16(nums[2])
+		data[4] = tmp[0]
+		data[5] = tmp[1]
+		tmp = ascii2uint16(nums[3])
+		data[6] = tmp[0]
+		data[7] = tmp[1]
+		length = 8
+	} else if convertMethod == "4int162ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode ascii24int16(reverse of %s)\n", convertMethod)
+		}
+		nums := strings.Split(payload, " ")
+		tmp := ascii2int16(nums[0])
+		data[0] = tmp[0]
+		data[1] = tmp[1]
+		tmp = ascii2int16(nums[1])
+		data[2] = tmp[0]
+		data[3] = tmp[1]
+		tmp = ascii2int16(nums[2])
+		data[4] = tmp[0]
+		data[5] = tmp[1]
+		tmp = ascii2int16(nums[3])
+		data[6] = tmp[0]
+		data[7] = tmp[1]
+		length = 8
+	} else if convertMethod == "4uint82ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode ascii24uint8(reverse of %s)\n", convertMethod)
+		}
+		nums := strings.Split(payload, " ")
+		tmp := ascii2uint8(nums[0])
+		data[0] = tmp
+		data[1] = 0
+		tmp = ascii2uint8(nums[1])
+		data[2] = tmp
+		data[3] = 0
+		tmp = ascii2uint8(nums[2])
+		data[4] = tmp
+		data[5] = 0
+		tmp = ascii2uint8(nums[3])
+		data[6] = tmp
+		data[7] = 0
+		length = 8
 	} else if convertMethod == "bytecolor2colorcode" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode colorcode2bytecolor(reverse of %s)\n", convertMethod)
@@ -123,6 +185,11 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 			fmt.Printf("convertfunctions: using convertmode none\n")
 		}
 		return bytes2ascii(uint32(length), payload)
+	} else if convertMethod == "16bool2ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode 16bool2ascii\n")
+		}
+		return bool2ascii(payload[0:2])
 	} else if convertMethod == "uint82ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode uint82ascii\n")
@@ -148,6 +215,21 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 			fmt.Printf("convertfunctions: using convertmode 2uint322ascii\n")
 		}
 		return uint322ascii(payload[0:4]) + " " + uint322ascii(payload[4:8])
+	} else if convertMethod == "4uint162ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode 4uint162ascii\n")
+		}
+		return uint162ascii(payload[0:2]) + " " + uint162ascii(payload[2:4]) + " " + uint162ascii(payload[4:6]) + " " + uint162ascii(payload[6:8])
+	} else if convertMethod == "4int162ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode 4int162ascii\n")
+		}
+		return int162ascii(payload[0:2]) + " " + int162ascii(payload[2:4]) + " " + int162ascii(payload[4:6]) + " " + int162ascii(payload[6:8])
+	} else if convertMethod == "4uint82ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode 4uint82ascii\n")
+		}
+		return uint82ascii(payload[0]) + " " + uint82ascii(payload[2]) + " " + uint82ascii(payload[4]) + " " + uint82ascii(payload[6])
 	} else if convertMethod == "pixelbin2ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode pixelbin2ascii\n")
@@ -185,6 +267,55 @@ func ascii2bytes(payload string) ([8]byte, uint8) {
 }
 
 // ######################################################################
+// #			BOOL2ASCII				       #
+// ######################################################################
+// bool2ascii takes exactly two byte and returns a string with a
+// boolean interpretation of the found data
+func bool2ascii(payload []byte) string {
+	if len(payload) != 2 {
+		return "Err in CAN-Frame, data must be 2 bytes."
+	}
+	data := binary.LittleEndian.Uint16(payload)
+	bits := strconv.FormatUint(uint64(data), 2)
+	split := strings.Split(bits, "")
+// fill the '0' bits
+	if len(split) < 16 {
+		for i := len(split); i < 16; i++ {
+			split = append([]string{"0"}, split...)
+		}
+	}
+// get the two 'bytes'
+	lower := split[8:16]
+	upper := split[0:8]
+// swap 'bytes', according to integer representation
+	lower[0], lower[1], lower[2], lower[3], lower[4], lower[5], lower[6], lower[7] = lower[7], lower[6], lower[5], lower[4], lower[3], lower[2], lower[1], lower[0]
+	upper[0], upper[1], upper[2], upper[3], upper[4], upper[5], upper[6], upper[7] = upper[7], upper[6], upper[5], upper[4], upper[3], upper[2], upper[1], upper[0]
+	return strings.Join(lower, " ") + " " + strings.Join(upper, " ")
+}
+
+func ascii2bool(payload string) []byte {
+// split the 16 '0' or '1'
+	split := strings.Split(payload, " ")
+// get the two 'bytes'
+	lower := split[0:8]
+	upper := split[8:16]
+// swap 'bytes', according to integer representation
+	lower[0], lower[1], lower[2], lower[3], lower[4], lower[5], lower[6], lower[7] = lower[7], lower[6], lower[5], lower[4], lower[3], lower[2], lower[1], lower[0]
+	upper[0], upper[1], upper[2], upper[3], upper[4], upper[5], upper[6], upper[7] = upper[7], upper[6], upper[5], upper[4], upper[3], upper[2], upper[1], upper[0]
+// convert to string again
+	tmp := strings.Join(upper, "") + strings.Join(lower, "")
+//	tmp := strings.Join(lower, "") + strings.Join(upper, "")
+	number, err := strconv.ParseUint(tmp, 2, 16)
+	a := make([]byte, 2)
+	if err != nil {
+		fmt.Printf("error converting %s\n", tmp)
+	} else {
+		binary.LittleEndian.PutUint16(a, uint16(number))
+	}
+	return a
+}
+
+// ######################################################################
 // #			UINT82ASCII				       #
 // ######################################################################
 // uint82ascii takes exactly one byte and returns a string with a
@@ -211,6 +342,27 @@ func uint162ascii(payload []byte) string {
 }
 
 func ascii2uint16(payload string) []byte {
+	tmp, _ := strconv.Atoi(payload)
+	number := uint16(tmp)
+	a := make([]byte, 2)
+	binary.LittleEndian.PutUint16(a, number)
+	return a
+}
+
+// ######################################################################
+// #			INT162ASCII				       #
+// ######################################################################
+// int162ascii takes 2 bytes and returns a string with a numeric
+// decimal interpretation of the found data as ascii-string
+func int162ascii(payload []byte) string {
+	if len(payload) != 2 {
+		return "Err in CAN-Frame, data must be 2 bytes."
+	}
+	data := int16(binary.LittleEndian.Uint16(payload))
+	return strconv.FormatInt(int64(data), 10)
+}
+
+func ascii2int16(payload string) []byte {
 	tmp, _ := strconv.Atoi(payload)
 	number := uint16(tmp)
 	a := make([]byte, 2)

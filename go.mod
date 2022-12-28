@@ -1,4 +1,4 @@
-module github.com/c3re/can2mqtt
+module github.com/gbeine/can2mqtt
 
 go 1.18
 
