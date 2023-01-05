@@ -68,22 +68,6 @@ func canSubscribe(id uint32) {
 	}
 }
 
-// Subscribe to a CAN-ID
-func canUnsubscribe(id uint32) {
-	var tmp []uint32
-	csiLock.Lock()
-	for _, elem := range csi {
-		if elem != id {
-			tmp = append(tmp, elem)
-		}
-	}
-	csi = tmp
-	csiLock.Unlock()
-	if dbg {
-		fmt.Printf("canbushandler: mutex lock+unlock successful. unsubscribed ID:%d\n", id)
-	}
-}
-
 // expects a CANFrame and sends it
 func canPublish(frame can.Frame) {
 	if dbg {

@@ -15,37 +15,37 @@ func mqttStart(suppliedString string) {
 	connectString := suppliedString
 	if strings.Contains(suppliedString, "@") {
 		// looks like authentication is required for this server
-		userpwhost := strings.TrimPrefix(suppliedString, "tcp://")
-		userpw, host, found := strings.Cut(userpwhost, "@")
+		userPasswordHost := strings.TrimPrefix(suppliedString, "tcp://")
+		userPassword, host, found := strings.Cut(userPasswordHost, "@")
 		if !found {
 			fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
 			fmt.Println("suppliedString: ", suppliedString)
-			fmt.Println("userpwhost: ", userpwhost)
+			fmt.Println("userPasswordHost: ", userPasswordHost)
 		}
-		user, pw, found = strings.Cut(userpw, ":")
+		user, pw, found = strings.Cut(userPassword, ":")
 		if !found {
 			fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
 			fmt.Println("suppliedString: ", suppliedString)
-			fmt.Println("userpwhost: ", userpwhost)
+			fmt.Println("userPasswordHost: ", userPasswordHost)
 		}
 		connectString = "tcp://" + host
 	}
-	clientsettings := MQTT.NewClientOptions().AddBroker(connectString)
-	clientsettings.SetClientID("CAN2MQTT")
-	clientsettings.SetDefaultPublishHandler(handleMQTT)
+	clientSettings := MQTT.NewClientOptions().AddBroker(connectString)
+	clientSettings.SetClientID("CAN2MQTT")
+	clientSettings.SetDefaultPublishHandler(handleMQTT)
 	if strings.Contains(suppliedString, "@") {
-		clientsettings.SetCredentialsProvider(userPwCredProv)
+		clientSettings.SetCredentialsProvider(userPwCredProv)
 	}
-	client = MQTT.NewClient(clientsettings)
+	client = MQTT.NewClient(clientSettings)
 	if dbg {
 		fmt.Printf("mqtthandler: starting connection to: %s\n", connectString)
 	}
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		fmt.Println("mqtthandler: Oh no an error occured...")
+		fmt.Println("mqttHandler: Oh no an error occurred...")
 		panic(token.Error())
 	}
 	if dbg {
-		fmt.Printf("mqtthandler: connection established!\n")
+		fmt.Printf("mqttHandler: connection established!\n")
 	}
 }
 

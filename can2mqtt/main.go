@@ -2,7 +2,7 @@
 package main
 
 import (
-	"fmt" // printfoo
+	"fmt" // print
 	C2M "github.com/c3re/can2mqtt"
 	"os" // args
 )
