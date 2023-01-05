@@ -62,7 +62,7 @@ func SetConfDirMode(s string) {
 	} else if s == "2" {
 		dirMode = 2
 	} else {
-		fmt.Errorf("Error: got invalid value for -d (", s, "). Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)")
+		fmt.Errorf("Error: got invalid value for -d (%s). Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)", s)
 	}
 }
 
