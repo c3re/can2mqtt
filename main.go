@@ -3,7 +3,7 @@ package can2mqtt
 import (
 	"bufio"        // Reader
 	"encoding/csv" // CSV Management
-	"fmt"          // printfoo
+	"fmt"          // print :)
 	"io"           // EOF const
 	"log"          // error management
 	"os"           // open files
@@ -12,7 +12,7 @@ import (
 )
 
 // can2mqtt is a struct that represents the internal type of
-// one line of the can2mqtt.csv file. Therefore it has
+// one line of the can2mqtt.csv file. It has
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
@@ -21,16 +21,15 @@ type can2mqtt struct {
 	mqttTopic  string
 }
 
-var can2mqttPairs []can2mqtt           // representation of can2mqtt.csv
-var dbg bool = false                   // verbose on off [-v]
-var ci string = "can0"                 // the CAN-Interface [-c]
-var cs string = "tcp://localhost:1883" // mqtt-connectstring [-m]
-var c2mf string = "can2mqtt.csv"       // path to the can2mqtt.csv [-f]
-var conf bool = true                   // represents wether a running conf
-// is set or not
+var can2mqttPairs []can2mqtt    // representation of can2mqtt.csv
+var dbg = false                 // verbose on off [-v]
+var ci = "can0"                 // the CAN-Interface [-c]
+var cs = "tcp://localhost:1883" // mqtt-connect-string [-m]
+var c2mf = "can2mqtt.csv"       // path to the can2mqtt.csv [-f]
+var dirMode = 0                 // directional modes: 0=bidirectional 1=can2mqtt only 2=mqtt2can only [-d]
 var wg sync.WaitGroup
 
-// SetDbg decides wether there is really verbose output or
+// SetDbg decides whether there is really verbose output or
 // just standard information output. Default is false.
 func SetDbg(v bool) {
 	dbg = v
@@ -48,14 +47,27 @@ func SetC2mf(f string) {
 	c2mf = f
 }
 
-// SetCs sets the MQTT connectstring which contains: protocol,
+// SetCs sets the MQTT connect-string which contains: protocol,
 // hostname and port. Default is: tcp://localhost:1883
 func SetCs(s string) {
 	cs = s
 }
 
+// Sets the dirMode
+func SetConfDirMode(s string) {
+	if s == "0" {
+		dirMode = 0
+	} else if s == "1" {
+		dirMode = 1
+	} else if s == "2" {
+		dirMode = 2
+	} else {
+		fmt.Errorf("Error: got invalid value for -d (", s, "). Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)")
+	}
+}
+
 // Start is the function that should be called after debug-level
-// connectstring, can interface and can2mqtt file have been set.
+// connect-string, can interface and can2mqtt file have been set.
 // Start takes care of everything that happens after that.
 // It starts the CAN-Bus connection and the MQTT-Connection. It
 // parses the can2mqtt.csv file and from there everything takes
@@ -66,6 +78,16 @@ func Start() {
 	fmt.Println("MQTT-Config:  ", cs)
 	fmt.Println("CAN-Config:   ", ci)
 	fmt.Println("can2mqtt.csv: ", c2mf)
+	fmt.Print("dirMode:       ", dirMode, " (")
+	if dirMode == 0 {
+		fmt.Println("bidirectional)")
+	}
+	if dirMode == 1 {
+		fmt.Println("can2mqtt only)")
+	}
+	if dirMode == 2 {
+		fmt.Println("mqtt2can only)")
+	}
 	fmt.Print("Debug-Mode:    ")
 	if dbg {
 		fmt.Println("yes")
@@ -133,7 +155,7 @@ func getTopic(canId int) string {
 			return c2mp.mqttTopic
 		}
 	}
-	// Fehlerfall
+	// err
 	return "-1"
 }
 
@@ -144,28 +166,28 @@ func getConvTopic(topic string) string {
 			return c2mp.convMethod
 		}
 	}
-	// Fehlerfall
+	// err
 	return "-1"
 }
 
-// get the correspondig ID for a given topic
+// get the corresponding ID for a given topic
 func getId(mqttTopic string) int {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.mqttTopic == mqttTopic {
 			return c2mp.canId
 		}
 	}
-	// Fehlerfall
+	// err
 	return -1
 }
 
-// get the convertode for a given ID
+// get the convertMode for a given ID
 func getConvId(canId int) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId {
 			return c2mp.convMethod
 		}
 	}
-	// Fehlerfall
+	// err
 	return "-1"
 }

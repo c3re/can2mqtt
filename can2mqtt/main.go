@@ -3,7 +3,7 @@ package main
 
 import (
 	"fmt" // printfoo
-	C2M "github.com/gbeine/can2mqtt"
+	C2M "github.com/c3re/can2mqtt"
 	"os" // args
 )
 
@@ -23,6 +23,9 @@ func main() {
 		case "-f":
 			i++
 			C2M.SetC2mf(os.Args[i])
+		case "-d":
+			i++
+			C2M.SetConfDirMode(os.Args[i])
 		default:
 			i = len(os.Args)
 			conf = false
@@ -37,8 +40,9 @@ func main() {
 // help function (obvious...)
 func printHelp() {
 	fmt.Printf("welcome to the CAN2MQTT bridge!\n\n")
-	fmt.Printf("Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h]\n")
+	fmt.Printf("Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h] [-d <dirMode>]\n")
 	fmt.Printf("<file>: a can2mqtt.csv file\n")
 	fmt.Printf("<CAN-Interface>: a CAN-Interface e.g. can0\n")
 	fmt.Printf("<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://[user:pass@]localhost:1883\n")
+	fmt.Printf("<dirMode>: directional Mode 0 = bidirectional, 1 = can2mqtt only, 2 = mqtt2can only\n")
 }
