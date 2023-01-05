@@ -2,8 +2,8 @@ package can2mqtt
 
 import (
 	"fmt"
-        "strings"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"strings"
 )
 
 var client MQTT.Client
@@ -12,30 +12,30 @@ var user, pw string
 // uses the connectString to establish a connection to the MQTT
 // broker
 func mqttStart(suppliedString string) {
-        connectString := suppliedString
-        if strings.Contains(suppliedString, "@") {
-          // looks like authentication is required for this server
-          userpwhost := strings.TrimPrefix(suppliedString, "tcp://")
-          userpw, host, found := strings.Cut(userpwhost, "@")
-          if !found {
-            fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
-            fmt.Println("suppliedString: ", suppliedString)
-            fmt.Println("userpwhost: ", userpwhost)
-          }
-          user, pw, found = strings.Cut(userpw, ":")
-          if !found {
-            fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
-            fmt.Println("suppliedString: ", suppliedString)
-            fmt.Println("userpwhost: ", userpwhost)
-          }
-          connectString = "tcp://" + host
-        }
+	connectString := suppliedString
+	if strings.Contains(suppliedString, "@") {
+		// looks like authentication is required for this server
+		userpwhost := strings.TrimPrefix(suppliedString, "tcp://")
+		userpw, host, found := strings.Cut(userpwhost, "@")
+		if !found {
+			fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
+			fmt.Println("suppliedString: ", suppliedString)
+			fmt.Println("userpwhost: ", userpwhost)
+		}
+		user, pw, found = strings.Cut(userpw, ":")
+		if !found {
+			fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
+			fmt.Println("suppliedString: ", suppliedString)
+			fmt.Println("userpwhost: ", userpwhost)
+		}
+		connectString = "tcp://" + host
+	}
 	clientsettings := MQTT.NewClientOptions().AddBroker(connectString)
 	clientsettings.SetClientID("CAN2MQTT")
 	clientsettings.SetDefaultPublishHandler(handleMQTT)
-        if strings.Contains(suppliedString, "@") {
-          clientsettings.SetCredentialsProvider(userPwCredProv)
-        }
+	if strings.Contains(suppliedString, "@") {
+		clientsettings.SetCredentialsProvider(userPwCredProv)
+	}
 	client = MQTT.NewClient(clientsettings)
 	if dbg {
 		fmt.Printf("mqtthandler: starting connection to: %s\n", connectString)
@@ -48,9 +48,10 @@ func mqttStart(suppliedString string) {
 		fmt.Printf("mqtthandler: connection established!\n")
 	}
 }
+
 // credentialsProvider
 func userPwCredProv() (username, password string) {
-  return user, pw
+	return user, pw
 }
 
 // subscribe to a new topic
