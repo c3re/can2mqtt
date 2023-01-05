@@ -53,7 +53,7 @@ func SetCs(s string) {
 	cs = s
 }
 
-// Sets the dirMode
+// SetConfDirMode sets the dirMode
 func SetConfDirMode(s string) {
 	if s == "0" {
 		dirMode = 0
@@ -62,7 +62,7 @@ func SetConfDirMode(s string) {
 	} else if s == "2" {
 		dirMode = 2
 	} else {
-		fmt.Errorf("Error: got invalid value for -d (%s). Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)", s)
+		_ = fmt.Errorf("error: got invalid value for -d (%s). Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)", s)
 	}
 }
 

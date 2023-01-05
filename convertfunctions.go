@@ -304,7 +304,6 @@ func ascii2bool(payload string) []byte {
 	upper[0], upper[1], upper[2], upper[3], upper[4], upper[5], upper[6], upper[7] = upper[7], upper[6], upper[5], upper[4], upper[3], upper[2], upper[1], upper[0]
 	// convert to string again
 	tmp := strings.Join(upper, "") + strings.Join(lower, "")
-	//	tmp := strings.Join(lower, "") + strings.Join(upper, "")
 	number, err := strconv.ParseUint(tmp, 2, 16)
 	a := make([]byte, 2)
 	if err != nil {

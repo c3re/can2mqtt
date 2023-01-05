@@ -6,9 +6,9 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
 
-// handleCAN is the standard receivehandler for CANFrames
+// handleCAN is the standard receive handler for CANFrames
 // and does the following:
-// 1. calling standard convertfunction: convert2MQTT
+// 1. calling standard convert function: convert2MQTT
 // 2. sending the message
 func handleCAN(cf can.Frame) {
 	if dbg {
@@ -25,11 +25,11 @@ func handleCAN(cf can.Frame) {
 	}
 }
 
-// handleMQTT is the standard receivehandler for MQTT
+// handleMQTT is the standard receive handler for MQTT
 // messages and does the following:
-// 1. calling the standard convertfunction: convert2CAN
+// 1. calling the standard convert function: convert2CAN
 // 2. sending the message
-func handleMQTT(cl MQTT.Client, msg MQTT.Message) {
+func handleMQTT(_ MQTT.Client, msg MQTT.Message) {
 	if dbg {
 		fmt.Printf("receivehandler: received message: topic: %s, msg: %s\n", msg.Topic(), msg.Payload())
 	}
