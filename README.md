@@ -50,10 +50,18 @@ Explanation for the 1st Line: For example our Doorstatus is published on the CAN
 Here they are:
 ### none
 does not convert anything. It just takes a bunch of bytes and hands it over to the other side. If you want to send strings, this will be your choice.
+### 16bool2ascii
+Interprets two bytes can-wise and publishes them as 16 boolean values to mqtt
 ### uint82ascii / uint162ascii / uint322ascii / uint642ascii 
 On the can2mqtt way it takes 1, 2, 4 or 8 byte and interprets it as an uint of that size and parses it to a human readable string for the mqtt side. The other way round this convert motde takes an int in a string representation and sends out an array of bytes representing that number (little-endian)
 ### 2uint322ascii
 This one is a bit special but all it does is that it takes 8 bytes from the CAN-Bus and parses two uint32s out of it and sends them in a string representation to MQTT. The two numbers are seperated with a simple space(" "). MQTT2CAN-wise it takes two string representations of numbers and converts them to 8 bytes representing them as 2 uint32.
+### 4uint162ascii
+Interprets eight bytes can-wise and publishes them as 4 uint16 seperated by a space to the mqtt side
+### 4int162ascii
+Interprets eight bytes can-wise and publishes them as 4 int16 seperated by a space to the mqtt side
+### 4uint82ascii
+Interprets four bytes (byte 0, 2, 4 and 6) can-wise and publishes them as 4 uint8 seperated by a space to the mqtt side
 ### bytecolor2colorcode
 Converts an bytearray of 3 bytes to hexadecimal colorcode
 ### pixelbin2ascii
