@@ -118,13 +118,15 @@ func readC2MPFromFile(filename string) {
 		if err == io.EOF {
 			break
 		}
-		i, err := strconv.Atoi(record[0])
-		if isInSlice(i, record[2]) {
+		canID, err := strconv.Atoi(record[0])
+		convMode := record[1]
+		topic := record[2]
+		if isInSlice(canID, topic) {
 			panic("main: each ID and each topic is only allowed once!")
 		}
-		can2mqttPairs = append(can2mqttPairs, can2mqtt{i, record[1], record[2]})
-		mqttSubscribe(record[2])
-		canSubscribe(uint32(i))
+		can2mqttPairs = append(can2mqttPairs, can2mqtt{canID, convMode, topic})
+		mqttSubscribe(topic)        // TODO move to append function
+		canSubscribe(uint32(canID)) // TODO move to append function
 	}
 	if dbg {
 		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
@@ -160,7 +162,7 @@ func getTopic(canId int) string {
 }
 
 // get the conversion mode for a given topic
-func getConvTopic(topic string) string {
+func getConvModeFromTopic(topic string) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.mqttTopic == topic {
 			return c2mp.convMethod
@@ -182,7 +184,7 @@ func getId(mqttTopic string) int {
 }
 
 // get the convertMode for a given ID
-func getConvId(canId int) string {
+func getConvModeFromId(canId int) string {
 	for _, c2mp := range can2mqttPairs {
 		if c2mp.canId == canId {
 			return c2mp.convMethod

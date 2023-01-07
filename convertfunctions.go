@@ -16,7 +16,7 @@ import (
 // 4. build CANFrame
 // 5. returning the CANFrame
 func convert2CAN(topic, payload string) can.Frame {
-	convertMethod := getConvTopic(topic)
+	convertMethod := getConvModeFromTopic(topic)
 	var Id = uint32(getId(topic))
 	var data [8]byte
 	var length uint8
@@ -179,7 +179,7 @@ func convert2CAN(topic, payload string) can.Frame {
 // 4. building a string
 // 5. return
 func convert2MQTT(id int, length int, payload [8]byte) string {
-	convertMethod := getConvId(id)
+	convertMethod := getConvModeFromId(id)
 	if convertMethod == "none" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode none\n")
