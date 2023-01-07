@@ -10,7 +10,7 @@ Here you can see can2mqtt in action:
 can2mqtt is written in Go and static linked binaries are available [here](https://github.com/c3re/can2mqtt/releases/latest).
 can2mqtt has no further dependencies. On a Raspberry for example it should be enough to run:
 ```
-wget https://github.com/c3re/can2mqtt/releases/download/v1.1.0/can2mqtt-v1.1.0-linux-arm -O can2mqtt
+wget https://github.com/c3re/can2mqtt/releases/download/v1.3.0/can2mqtt-v1.3.0-linux-arm -O can2mqtt
 chmod +x can2mqtt
 ./can2mqtt
 ```
