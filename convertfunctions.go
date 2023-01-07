@@ -17,7 +17,7 @@ import (
 // 5. returning the CANFrame
 func convert2CAN(topic, payload string) can.Frame {
 	convertMethod := getConvModeFromTopic(topic)
-	var Id = uint32(getId(topic))
+	var Id = uint32(getIdFromTopic(topic))
 	var data [8]byte
 	var length uint8
 	if convertMethod == "none" {

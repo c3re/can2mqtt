@@ -18,7 +18,7 @@ func handleCAN(cf can.Frame) {
 	if dbg {
 		fmt.Printf("receivehandler: converted String: %s\n", mqttPayload)
 	}
-	topic := getTopic(int(cf.ID))
+	topic := getTopicFromId(int(cf.ID))
 	if dirMode != 2 {
 		mqttPublish(topic, mqttPayload)
 		fmt.Printf("ID: %d len: %d data: %X -> topic: \"%s\" message: \"%s\"\n", cf.ID, cf.Length, cf.Data, topic, mqttPayload)
