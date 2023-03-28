@@ -62,6 +62,8 @@ Interprets eight bytes can-wise and publishes them as 4 uint16 seperated by a sp
 Interprets eight bytes can-wise and publishes them as 4 int16 seperated by a space to the mqtt side
 ### 4uint82ascii
 Interprets four bytes (byte 0, 2, 4 and 6) can-wise and publishes them as 4 uint8 seperated by a space to the mqtt side
+### 8uint82ascii
+Interprets eight bytes (byte 0 to 7) can-wise and publishes them as eight uint8 seperated by a space to the mqtt side. The other way around it expects eight bytes seperated by a space and publishes them as eight bytes on the can-side.
 ### bytecolor2colorcode
 Converts an bytearray of 3 bytes to hexadecimal colorcode
 ### pixelbin2ascii
