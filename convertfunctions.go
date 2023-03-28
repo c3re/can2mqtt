@@ -141,6 +141,23 @@ func convert2CAN(topic, payload string) can.Frame {
 		data[6] = tmp
 		data[7] = 0
 		length = 8
+	} else if convertMethod == "8uint82ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode ascii28uint8(reverse of %s)\n", convertMethod)
+		}
+		nums := strings.Split(payload, " ")
+		if len(nums) != 8 {
+			fmt.Printf("Error, wrong number of bytes provided for convertmode 8uint82ascii, expected 8 got %d\n", len(nums))
+		}
+		data[0] = ascii2uint8(nums[0])
+		data[1] = ascii2uint8(nums[1])
+		data[2] = ascii2uint8(nums[2])
+		data[3] = ascii2uint8(nums[3])
+		data[4] = ascii2uint8(nums[4])
+		data[5] = ascii2uint8(nums[5])
+		data[6] = ascii2uint8(nums[6])
+		data[7] = ascii2uint8(nums[7])
+		length = 8
 	} else if convertMethod == "bytecolor2colorcode" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode colorcode2bytecolor(reverse of %s)\n", convertMethod)
@@ -230,6 +247,11 @@ func convert2MQTT(id int, length int, payload [8]byte) string {
 			fmt.Printf("convertfunctions: using convertmode 4uint82ascii\n")
 		}
 		return uint82ascii(payload[0]) + " " + uint82ascii(payload[2]) + " " + uint82ascii(payload[4]) + " " + uint82ascii(payload[6])
+	} else if convertMethod == "8uint82ascii" {
+		if dbg {
+			fmt.Printf("convertfunctions: using convertmode 8uint82ascii\n")
+		}
+		return uint82ascii(payload[0]) + " " + uint82ascii(payload[1]) + " " + uint82ascii(payload[2]) + " " + uint82ascii(payload[3]) + " " + uint82ascii(payload[4]) + " " + uint82ascii(payload[5]) + " " + uint82ascii(payload[6]) + " " + uint82ascii(payload[7])
 	} else if convertMethod == "pixelbin2ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode pixelbin2ascii\n")
