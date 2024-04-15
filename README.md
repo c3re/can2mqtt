@@ -48,23 +48,19 @@ Explanation for the 1st Line: For example our Doorstatus is published on the CAN
 
 ## convert-modes
 Here they are:
-### none
-does not convert anything. It just takes a bunch of bytes and hands it over to the other side. If you want to send strings, this will be your choice.
-### 16bool2ascii
-Interprets two bytes can-wise and publishes them as 16 boolean values to mqtt
-### uint82ascii / uint162ascii / uint322ascii / uint642ascii 
-On the can2mqtt way it takes 1, 2, 4 or 8 byte and interprets it as an uint of that size and parses it to a human readable string for the mqtt side. The other way round this convert motde takes an int in a string representation and sends out an array of bytes representing that number (little-endian)
-### 2uint322ascii
-This one is a bit special but all it does is that it takes 8 bytes from the CAN-Bus and parses two uint32s out of it and sends them in a string representation to MQTT. The two numbers are seperated with a simple space(" "). MQTT2CAN-wise it takes two string representations of numbers and converts them to 8 bytes representing them as 2 uint32.
-### 4uint162ascii
-Interprets eight bytes can-wise and publishes them as 4 uint16 seperated by a space to the mqtt side
-### 4int162ascii
-Interprets eight bytes can-wise and publishes them as 4 int16 seperated by a space to the mqtt side
-### 4uint82ascii
-Interprets four bytes (byte 0, 2, 4 and 6) can-wise and publishes them as 4 uint8 seperated by a space to the mqtt side
-### 8uint82ascii
-Interprets eight bytes (byte 0 to 7) can-wise and publishes them as eight uint8 seperated by a space to the mqtt side. The other way around it expects eight bytes seperated by a space and publishes them as eight bytes on the can-side.
-### bytecolor2colorcode
-Converts an bytearray of 3 bytes to hexadecimal colorcode
-### pixelbin2ascii
-This mode was designed to adress colorized pixels. MQTT-wise you can insert a string like "<0-255> #RRGGBB" wich will be converted to 4 byte on the CAN-BUS the first byte will be the number of the LED 0-255 and bytes 1, 2, 3 are the color of red, green and blue.
+
+| convertmode   | description                                                                                                                                                                                                                                                                                    |
+|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `none`        | does not convert anything. It just takes a bunch of bytes and hands it over to the other side. If you want to send strings, this will be your choice. If you have a mqtt payload that is longer than eight bytes, only the first eight bytes will be send via CAN.                             |
+| `16bool2ascii` | Interprets two bytes can-wise and publishes them as 16 boolean values to mqtt                                                                                                                                                                                                                  |
+| `uint82ascii ` | On the can2mqtt way it takes 1 byte and interprets it as an uint8 and converts it to a string for the mqtt side. The other way round this convert mode takes an uint8 in a string representation and sends out one byte representing that number (little-endian)                               |
+| `uint162ascii ` | On the can2mqtt way it takes 2 bytes and interprets them as an uint16 and converts it to a string containing that number for the mqtt side. The other way round this convert mode takes an uint16 in a string representation and sends out two bytes representing that number (little-endian)  |
+| `uint322ascii ` | On the can2mqtt way it takes 4 bytes and interprets them as an uint32 and converts it to a string containing that number for the mqtt side. The other way round this convert mode takes an uint32 in a string representation and sends out four bytes representing that number (little-endian) |
+| `uint642ascii ` | On the can2mqtt way it takes 8 bytes and interprets them as an uint64 and converts it to a string containing that number for the mqtt side. The other way round this convert mode takes an uint64 in a string representation and sends out four bytes representing that number (little-endian) |
+| `2uint322ascii` |This one is a bit special but all it does is that it takes 8 bytes from the CAN-Bus and parses two uint32s out of it and sends them in a string representation to MQTT. The two numbers are seperated with a simple space(" "). MQTT2CAN-wise it takes two string representations of numbers and converts them to 8 bytes representing them as 2 uint32.|
+| `4uint162ascii` | Interprets eight bytes can-wise and publishes them as 4 uint16 seperated by a space to the mqtt side                                                                                                                                                                                                                                                                                               |
+| `4int162ascii` | Interprets eight bytes can-wise and publishes them as 4 int16 seperated by a space to the mqtt side                                                                                                                                                                                                                                                                                               |
+| `4uint82ascii` | Interprets four bytes (byte 0, 2, 4 and 6) can-wise and publishes them as 4 uint8 seperated by a space to the mqtt side                                                                                                                                                                                                                                                                                               |
+| `8uint82ascii` | Interprets eight bytes (byte 0 to 7) can-wise and publishes them as eight uint8 seperated by a space to the mqtt side. The other way around it expects eight bytes seperated by a space and publishes them as eight bytes on the can-side.                                                                                                                                                                                                                                                                                               |
+| `bytecolor2colorcode` |Converts an bytearray of 3 bytes to hexadecimal colorcode                                                                                                                                                                                                                                                                                                |
+| `pixelbin2ascii` |This mode was designed to adress colorized pixels. MQTT-wise you can insert a string like "<0-255> #RRGGBB" wich will be converted to 4 byte on the CAN-BUS the first byte will be the number of the LED 0-255 and bytes 1, 2, 3 are the color of red, green and blue.                                                                                                                                                                                                                                                                                                |

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/brutella/can"
+	convert "github.com/c3re/can2mqtt/internal/convertfunctions"
 	"strconv"
 	"strings"
 )
@@ -24,11 +25,21 @@ func convert2CAN(topic, payload string) can.Frame {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode none (reverse of %s)\n", convertMethod)
 		}
-		data, length = ascii2bytes(payload)
+		convertedFrame, _ := convert.NoneToCan(payload)
+		// TODO check error
+		data = convertedFrame.Data
+		length = convertedFrame.Length
 	} else if convertMethod == "16bool2ascii" {
 		if dbg {
 			fmt.Printf("convertfunctions: using convertmode ascii2bool (reverse of %s)\n", convertMethod)
 		}
+		/*
+			convertedFrame, _ := convert.16Bool2AsciiToCan(payload)
+			// TODO check error
+			data = convertedFrame.Data
+			length = convertedFrame.Length
+		*/
+
 		tmp := ascii2bool(payload)
 		data[0] = tmp[0]
 		data[1] = tmp[1]
