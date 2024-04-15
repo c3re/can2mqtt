@@ -1,4 +1,4 @@
-package can2mqtt
+package internal
 
 import (
 	"bufio"        // Reader

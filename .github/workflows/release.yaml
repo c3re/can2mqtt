@@ -20,9 +20,9 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
-        goversion: 1.19
+        goversion: 1.22
         binary_name: can2mqtt
         compress_assets: false
-        project_path: can2mqtt
+        project_path: src
       env:
         CGO_ENABLED: 0
