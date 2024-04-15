@@ -17,11 +17,13 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Get dependencies
-      run: |
-        go get -v -t -d ./src/
+      run: go get -v -t -d
+      working-directory: ./src
 
     - name: Build
-      run: go build -v ./src
+      run: go build -v
+      working-directory: ./src
 
     - name: Test
-      run: go test -v ./src
+      run: go test -v
+      working-directory: ./src
