@@ -6,7 +6,7 @@ import (
 )
 
 func TestNoneToCan(t *testing.T) {
-	input := "Gladys"
+	input := []byte("Gladys")
 	output, err := NoneToCan(input)
 
 	// Check whether err is nil
@@ -32,7 +32,7 @@ func TestNoneToCan(t *testing.T) {
 		t.Fatalf(`NoneToMqtt failed, err not nil: %s`, err.Error())
 	}
 
-	if input != back {
+	if string(input) != string(back) {
 		t.Fatalf(`NoneToCan failed, back and forth conversion did not lead to original input`)
 	}
 }
@@ -77,7 +77,7 @@ func TestNoneToMqtt(t *testing.T) {
 }
 
 func FuzzNoneToCan(f *testing.F) {
-	f.Fuzz(func(t *testing.T, input string) {
+	f.Fuzz(func(t *testing.T, input []byte) {
 		output, err := NoneToCan(input)
 		if err != nil {
 			t.Fatalf("%v: decode: %v", input, err)
@@ -102,7 +102,7 @@ func FuzzNoneToCan(f *testing.F) {
 			}
 
 			// only first 8 bytes are important
-			if input[:8] != back {
+			if string(input[:8]) != string(back) {
 				t.Fatalf(`NoneToCan failed, back and forth conversion did not lead to original input`)
 			}
 		} else {
@@ -123,7 +123,7 @@ func FuzzNoneToCan(f *testing.F) {
 				t.Fatalf(`NoneToMqtt failed, err not nil: %s`, err.Error())
 			}
 
-			if input != back {
+			if string(input) != string(back) {
 				t.Fatalf(`NoneToCan failed, back and forth conversion did not lead to original input`)
 			}
 		}
