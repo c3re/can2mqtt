@@ -139,12 +139,31 @@ func readC2MPFromFile(filename string) {
 		if isInSlice(canID, topic) {
 			panic("main: each ID and each topic is only allowed once!")
 		}
-		pairFromID[canID] = &can2mqtt{
-			canId:      canID,
-			convMethod: convMode,
-			mqttTopic:  topic,
-			toCan:      convertfunctions.NoneToCan,
-			toMqtt:     convertfunctions.NoneToMqtt,
+		switch convMode {
+		case "16bool2ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.SixteenBool2AsciiToCan,
+				toMqtt:     convertfunctions.SixteenBool2AsciiToMqtt,
+			}
+		case "uint82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Uint82AsciiToCan,
+				toMqtt:     convertfunctions.Uint82AsciiToMqtt,
+			}
+		default:
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.NoneToCan,
+				toMqtt:     convertfunctions.NoneToMqtt,
+			}
 		}
 		pairFromTopic[topic] = pairFromID[canID]
 		mqttSubscribe(topic) // TODO move to append function

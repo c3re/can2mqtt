@@ -3,7 +3,6 @@ package convertfunctions
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -23,54 +22,6 @@ func ascii2bytes(payload string) ([8]byte, uint8) {
 		returner[i] = payload[i]
 	}
 	return returner, i
-}
-
-// ######################################################################
-// #			BOOL2ASCII				       #
-// ######################################################################
-// bool2ascii takes exactly two byte and returns a string with a
-// boolean interpretation of the found data
-func bool2ascii(payload []byte) string {
-	if len(payload) != 2 {
-		return "Err in CAN-Frame, data must be 2 bytes."
-	}
-	data := binary.LittleEndian.Uint16(payload)
-	bits := strconv.FormatUint(uint64(data), 2)
-	split := strings.Split(bits, "")
-	// fill the '0' bits
-	if len(split) < 16 {
-		for i := len(split); i < 16; i++ {
-			split = append([]string{"0"}, split...)
-		}
-	}
-	// get the two 'bytes'
-	lower := split[8:16]
-	upper := split[0:8]
-	// swap 'bytes', according to integer representation
-	lower[0], lower[1], lower[2], lower[3], lower[4], lower[5], lower[6], lower[7] = lower[7], lower[6], lower[5], lower[4], lower[3], lower[2], lower[1], lower[0]
-	upper[0], upper[1], upper[2], upper[3], upper[4], upper[5], upper[6], upper[7] = upper[7], upper[6], upper[5], upper[4], upper[3], upper[2], upper[1], upper[0]
-	return strings.Join(lower, " ") + " " + strings.Join(upper, " ")
-}
-
-func ascii2bool(payload string) []byte {
-	// split the 16 '0' or '1'
-	split := strings.Split(payload, " ")
-	// get the two 'bytes'
-	lower := split[0:8]
-	upper := split[8:16]
-	// swap 'bytes', according to integer representation
-	lower[0], lower[1], lower[2], lower[3], lower[4], lower[5], lower[6], lower[7] = lower[7], lower[6], lower[5], lower[4], lower[3], lower[2], lower[1], lower[0]
-	upper[0], upper[1], upper[2], upper[3], upper[4], upper[5], upper[6], upper[7] = upper[7], upper[6], upper[5], upper[4], upper[3], upper[2], upper[1], upper[0]
-	// convert to string again
-	tmp := strings.Join(upper, "") + strings.Join(lower, "")
-	number, err := strconv.ParseUint(tmp, 2, 16)
-	a := make([]byte, 2)
-	if err != nil {
-		fmt.Printf("error converting %s\n", tmp)
-	} else {
-		binary.LittleEndian.PutUint16(a, uint16(number))
-	}
-	return a
 }
 
 // ######################################################################

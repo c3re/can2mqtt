@@ -18,7 +18,7 @@ func handleCAN(cf can.Frame) {
 	if dirMode != 2 {
 		mqttPayload, err := pairFromID[cf.ID].toMqtt(cf)
 		if err != nil {
-			fmt.Printf("Error while converting CAN Frame with ID %d and payload %s: %s", cf.ID, cf.Data, err.Error())
+			fmt.Printf("Error while converting CAN Frame with ID %d and payload %s: %s\n", cf.ID, cf.Data, err.Error())
 			return
 		}
 		if dbg {
@@ -43,7 +43,7 @@ func handleMQTT(_ MQTT.Client, msg MQTT.Message) {
 		//cf := convert2CAN(msg.Topic(), string(msg.Payload()))
 		cf, err := pairFromTopic[msg.Topic()].toCan(msg.Payload())
 		if err != nil {
-			fmt.Printf("Error while converting MQTT-Message with Topic %s payload %s: %s", msg.Topic(), msg.Payload(), err.Error())
+			fmt.Printf("Error while converting MQTT-Message with Topic %s payload %s: %s\n", msg.Topic(), msg.Payload(), err.Error())
 			return
 		}
 		if dbg {
