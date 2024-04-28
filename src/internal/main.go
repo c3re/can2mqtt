@@ -4,12 +4,17 @@ import (
 	"bufio"        // Reader
 	"encoding/csv" // CSV Management
 	"fmt"          // print :)
-	"io"           // EOF const
-	"log"          // error management
-	"os"           // open files
-	"strconv"      // parse strings
+	"github.com/brutella/can"
+	"github.com/c3re/can2mqtt/internal/convertfunctions"
+	"io"      // EOF const
+	"log"     // error management
+	"os"      // open files
+	"strconv" // parse strings
 	"sync"
 )
+
+type convertToCan func(input string) (can.Frame, error)
+type convertToMqtt func(input can.Frame) (string, error)
 
 // can2mqtt is a struct that represents the internal type of
 // one line of the can2mqtt.csv file. It has
@@ -18,6 +23,8 @@ import (
 type can2mqtt struct {
 	canId      int
 	convMethod string
+	toCan      convertToCan
+	toMqtt     convertToMqtt
 	mqttTopic  string
 }
 
@@ -131,6 +138,8 @@ func readC2MPFromFile(filename string) {
 			canId:      canID,
 			convMethod: convMode,
 			mqttTopic:  topic,
+			toCan:      convertfunctions.NoneToCan,
+			toMqtt:     convertfunctions.NoneToMqtt,
 		}
 		pairFromTopic[topic] = pairFromID[canID]
 		mqttSubscribe(topic)        // TODO move to append function

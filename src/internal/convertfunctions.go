@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/brutella/can"
-	convert "github.com/c3re/can2mqtt/internal/convertfunctions"
 	"strconv"
 	"strings"
 )
@@ -17,187 +16,193 @@ import (
 // 4. build CANFrame
 // 5. returning the CANFrame
 func convert2CAN(topic, payload string) can.Frame {
-	convertMethod := getConvModeFromTopic(topic)
-	var Id = uint32(getIdFromTopic(topic))
-	var data [8]byte
-	var length uint8
-	if convertMethod == "none" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode none (reverse of %s)\n", convertMethod)
-		}
-		convertedFrame, _ := convert.NoneToCan(payload)
-		// TODO check error
-		data = convertedFrame.Data
-		length = convertedFrame.Length
-	} else if convertMethod == "16bool2ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii2bool (reverse of %s)\n", convertMethod)
-		}
-		/*
-			convertedFrame, _ := convert.16Bool2AsciiToCan(payload)
+	//convertMethod := getConvModeFromTopic(topic)
+	//var Id = uint32(getIdFromTopic(topic))
+	//var data [8]byte
+	//var length uint8
+	frame, err := pairFromTopic[topic].toCan(payload)
+	if err != nil {
+		fmt.Printf("Error while converting %s\n", err.Error())
+		return can.Frame{}
+	}
+	return frame
+	/*
+		if convertMethod == "none" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode none (reverse of %s)\n", convertMethod)
+			}
+			convertedFrame, _ := convert.NoneToCan(payload)
 			// TODO check error
 			data = convertedFrame.Data
 			length = convertedFrame.Length
-		*/
+		} else if convertMethod == "16bool2ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii2bool (reverse of %s)\n", convertMethod)
+			}
+				convertedFrame, _ := convert.16Bool2AsciiToCan(payload)
+				// TODO check error
+				data = convertedFrame.Data
+				length = convertedFrame.Length
 
-		tmp := ascii2bool(payload)
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		length = 2
-	} else if convertMethod == "uint82ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii2uint8 (reverse of %s)\n", convertMethod)
+			tmp := ascii2bool(payload)
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			length = 2
+		} else if convertMethod == "uint82ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii2uint8 (reverse of %s)\n", convertMethod)
+			}
+			data[0] = ascii2uint8(payload)
+			length = 1
+		} else if convertMethod == "uint162ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii2uint16(reverse of %s)\n", convertMethod)
+			}
+			tmp := ascii2uint16(payload)
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			length = 2
+		} else if convertMethod == "uint322ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii2uint32(reverse of %s)\n", convertMethod)
+			}
+			tmp := ascii2uint32(payload)
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			data[2] = tmp[2]
+			data[3] = tmp[3]
+			length = 4
+		} else if convertMethod == "uint642ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii2uint64(reverse of %s)\n", convertMethod)
+			}
+			tmp := ascii2uint64(payload)
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			data[2] = tmp[2]
+			data[3] = tmp[3]
+			data[4] = tmp[4]
+			data[5] = tmp[5]
+			data[6] = tmp[6]
+			data[7] = tmp[7]
+			length = 8
+		} else if convertMethod == "2uint322ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii22uint32(reverse of %s)\n", convertMethod)
+			}
+			nums := strings.Split(payload, " ")
+			tmp := ascii2uint32(nums[0])
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			data[2] = tmp[2]
+			data[3] = tmp[3]
+			tmp = ascii2uint32(nums[1])
+			data[4] = tmp[0]
+			data[5] = tmp[1]
+			data[6] = tmp[2]
+			data[7] = tmp[3]
+			length = 8
+		} else if convertMethod == "4uint162ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii24uint16(reverse of %s)\n", convertMethod)
+			}
+			nums := strings.Split(payload, " ")
+			tmp := ascii2uint16(nums[0])
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			tmp = ascii2uint16(nums[1])
+			data[2] = tmp[0]
+			data[3] = tmp[1]
+			tmp = ascii2uint16(nums[2])
+			data[4] = tmp[0]
+			data[5] = tmp[1]
+			tmp = ascii2uint16(nums[3])
+			data[6] = tmp[0]
+			data[7] = tmp[1]
+			length = 8
+		} else if convertMethod == "4int162ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii24int16(reverse of %s)\n", convertMethod)
+			}
+			nums := strings.Split(payload, " ")
+			tmp := ascii2int16(nums[0])
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			tmp = ascii2int16(nums[1])
+			data[2] = tmp[0]
+			data[3] = tmp[1]
+			tmp = ascii2int16(nums[2])
+			data[4] = tmp[0]
+			data[5] = tmp[1]
+			tmp = ascii2int16(nums[3])
+			data[6] = tmp[0]
+			data[7] = tmp[1]
+			length = 8
+		} else if convertMethod == "4uint82ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii24uint8(reverse of %s)\n", convertMethod)
+			}
+			nums := strings.Split(payload, " ")
+			tmp := ascii2uint8(nums[0])
+			data[0] = tmp
+			data[1] = 0
+			tmp = ascii2uint8(nums[1])
+			data[2] = tmp
+			data[3] = 0
+			tmp = ascii2uint8(nums[2])
+			data[4] = tmp
+			data[5] = 0
+			tmp = ascii2uint8(nums[3])
+			data[6] = tmp
+			data[7] = 0
+			length = 8
+		} else if convertMethod == "8uint82ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii28uint8(reverse of %s)\n", convertMethod)
+			}
+			nums := strings.Split(payload, " ")
+			if len(nums) != 8 {
+				fmt.Printf("Error, wrong number of bytes provided for convertmode 8uint82ascii, expected 8 got %d\n", len(nums))
+			}
+			data[0] = ascii2uint8(nums[0])
+			data[1] = ascii2uint8(nums[1])
+			data[2] = ascii2uint8(nums[2])
+			data[3] = ascii2uint8(nums[3])
+			data[4] = ascii2uint8(nums[4])
+			data[5] = ascii2uint8(nums[5])
+			data[6] = ascii2uint8(nums[6])
+			data[7] = ascii2uint8(nums[7])
+			length = 8
+		} else if convertMethod == "bytecolor2colorcode" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode colorcode2bytecolor(reverse of %s)\n", convertMethod)
+			}
+			tmp := colorcode2bytecolor(payload)
+			data[0] = tmp[0]
+			data[1] = tmp[1]
+			data[2] = tmp[2]
+			length = 3
+		} else if convertMethod == "pixelbin2ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode ascii2pixelbin(reverse of %s)\n", convertMethod)
+			}
+			numAndColor := strings.Split(payload, " ")
+			binNum := ascii2uint8(numAndColor[0])
+			tmp := colorcode2bytecolor(numAndColor[1])
+			data[0] = binNum
+			data[1] = tmp[0]
+			data[2] = tmp[1]
+			data[3] = tmp[2]
+			length = 4
+		} else {
+			if dbg {
+				fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
+			}
+			data, length = ascii2bytes(payload)
 		}
-		data[0] = ascii2uint8(payload)
-		length = 1
-	} else if convertMethod == "uint162ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii2uint16(reverse of %s)\n", convertMethod)
-		}
-		tmp := ascii2uint16(payload)
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		length = 2
-	} else if convertMethod == "uint322ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii2uint32(reverse of %s)\n", convertMethod)
-		}
-		tmp := ascii2uint32(payload)
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		data[2] = tmp[2]
-		data[3] = tmp[3]
-		length = 4
-	} else if convertMethod == "uint642ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii2uint64(reverse of %s)\n", convertMethod)
-		}
-		tmp := ascii2uint64(payload)
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		data[2] = tmp[2]
-		data[3] = tmp[3]
-		data[4] = tmp[4]
-		data[5] = tmp[5]
-		data[6] = tmp[6]
-		data[7] = tmp[7]
-		length = 8
-	} else if convertMethod == "2uint322ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii22uint32(reverse of %s)\n", convertMethod)
-		}
-		nums := strings.Split(payload, " ")
-		tmp := ascii2uint32(nums[0])
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		data[2] = tmp[2]
-		data[3] = tmp[3]
-		tmp = ascii2uint32(nums[1])
-		data[4] = tmp[0]
-		data[5] = tmp[1]
-		data[6] = tmp[2]
-		data[7] = tmp[3]
-		length = 8
-	} else if convertMethod == "4uint162ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii24uint16(reverse of %s)\n", convertMethod)
-		}
-		nums := strings.Split(payload, " ")
-		tmp := ascii2uint16(nums[0])
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		tmp = ascii2uint16(nums[1])
-		data[2] = tmp[0]
-		data[3] = tmp[1]
-		tmp = ascii2uint16(nums[2])
-		data[4] = tmp[0]
-		data[5] = tmp[1]
-		tmp = ascii2uint16(nums[3])
-		data[6] = tmp[0]
-		data[7] = tmp[1]
-		length = 8
-	} else if convertMethod == "4int162ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii24int16(reverse of %s)\n", convertMethod)
-		}
-		nums := strings.Split(payload, " ")
-		tmp := ascii2int16(nums[0])
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		tmp = ascii2int16(nums[1])
-		data[2] = tmp[0]
-		data[3] = tmp[1]
-		tmp = ascii2int16(nums[2])
-		data[4] = tmp[0]
-		data[5] = tmp[1]
-		tmp = ascii2int16(nums[3])
-		data[6] = tmp[0]
-		data[7] = tmp[1]
-		length = 8
-	} else if convertMethod == "4uint82ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii24uint8(reverse of %s)\n", convertMethod)
-		}
-		nums := strings.Split(payload, " ")
-		tmp := ascii2uint8(nums[0])
-		data[0] = tmp
-		data[1] = 0
-		tmp = ascii2uint8(nums[1])
-		data[2] = tmp
-		data[3] = 0
-		tmp = ascii2uint8(nums[2])
-		data[4] = tmp
-		data[5] = 0
-		tmp = ascii2uint8(nums[3])
-		data[6] = tmp
-		data[7] = 0
-		length = 8
-	} else if convertMethod == "8uint82ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii28uint8(reverse of %s)\n", convertMethod)
-		}
-		nums := strings.Split(payload, " ")
-		if len(nums) != 8 {
-			fmt.Printf("Error, wrong number of bytes provided for convertmode 8uint82ascii, expected 8 got %d\n", len(nums))
-		}
-		data[0] = ascii2uint8(nums[0])
-		data[1] = ascii2uint8(nums[1])
-		data[2] = ascii2uint8(nums[2])
-		data[3] = ascii2uint8(nums[3])
-		data[4] = ascii2uint8(nums[4])
-		data[5] = ascii2uint8(nums[5])
-		data[6] = ascii2uint8(nums[6])
-		data[7] = ascii2uint8(nums[7])
-		length = 8
-	} else if convertMethod == "bytecolor2colorcode" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode colorcode2bytecolor(reverse of %s)\n", convertMethod)
-		}
-		tmp := colorcode2bytecolor(payload)
-		data[0] = tmp[0]
-		data[1] = tmp[1]
-		data[2] = tmp[2]
-		length = 3
-	} else if convertMethod == "pixelbin2ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode ascii2pixelbin(reverse of %s)\n", convertMethod)
-		}
-		numAndColor := strings.Split(payload, " ")
-		binNum := ascii2uint8(numAndColor[0])
-		tmp := colorcode2bytecolor(numAndColor[1])
-		data[0] = binNum
-		data[1] = tmp[0]
-		data[2] = tmp[1]
-		data[3] = tmp[2]
-		length = 4
-	} else {
-		if dbg {
-			fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
-		}
-		data, length = ascii2bytes(payload)
-	}
-	myFrame := can.Frame{ID: Id, Length: length, Data: data}
-	return myFrame
+		myFrame := can.Frame{ID: Id, Length: length, Data: data}
+		return myFrame
+	*/
 }
 
 // convert2MQTT does the following
