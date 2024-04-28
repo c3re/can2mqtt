@@ -13,22 +13,22 @@ import (
 	"sync"
 )
 
-type convertToCan func(input string) (can.Frame, error)
-type convertToMqtt func(input can.Frame) (string, error)
+type convertToCan func(input []byte) (can.Frame, error)
+type convertToMqtt func(input can.Frame) ([]byte, error)
 
 // can2mqtt is a struct that represents the internal type of
 // one line of the can2mqtt.csv file. It has
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
-	canId      int
+	canId      uint32
 	convMethod string
 	toCan      convertToCan
 	toMqtt     convertToMqtt
 	mqttTopic  string
 }
 
-var pairFromID map[int]*can2mqtt       // c2m pair (lookup from ID)
+var pairFromID map[uint32]*can2mqtt    // c2m pair (lookup from ID)
 var pairFromTopic map[string]*can2mqtt // c2m pair (lookup from Topic)
 var dbg = false                        // verbose on off [-v]
 var ci = "can0"                        // the CAN-Interface [-c]
@@ -120,7 +120,7 @@ func readC2MPFromFile(filename string) {
 	}
 
 	r := csv.NewReader(bufio.NewReader(file))
-	pairFromID = make(map[int]*can2mqtt)
+	pairFromID = make(map[uint32]*can2mqtt)
 	pairFromTopic = make(map[string]*can2mqtt)
 	for {
 		record, err := r.Read()
@@ -128,7 +128,12 @@ func readC2MPFromFile(filename string) {
 		if err == io.EOF {
 			break
 		}
-		canID, err := strconv.Atoi(record[0])
+		tmp, err := strconv.ParseUint(record[0], 10, 32)
+		if err != nil {
+			fmt.Printf("Error while converting can-ID: %s :%s\n", record[0], err.Error())
+			continue
+		}
+		canID := uint32(tmp)
 		convMode := record[1]
 		topic := record[2]
 		if isInSlice(canID, topic) {
@@ -142,8 +147,8 @@ func readC2MPFromFile(filename string) {
 			toMqtt:     convertfunctions.NoneToMqtt,
 		}
 		pairFromTopic[topic] = pairFromID[canID]
-		mqttSubscribe(topic)        // TODO move to append function
-		canSubscribe(uint32(canID)) // TODO move to append function
+		mqttSubscribe(topic) // TODO move to append function
+		canSubscribe(canID)  // TODO move to append function
 	}
 	if dbg {
 		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
@@ -155,7 +160,7 @@ func readC2MPFromFile(filename string) {
 }
 
 // check function to check if a topic or an ID is in the slice
-func isInSlice(canId int, mqttTopic string) bool {
+func isInSlice(canId uint32, mqttTopic string) bool {
 	if pairFromID[canId] != nil {
 		if dbg {
 			fmt.Printf("main: The ID %d or the Topic %s is already in the list!\n", canId, mqttTopic)
@@ -172,7 +177,7 @@ func isInSlice(canId int, mqttTopic string) bool {
 }
 
 // get the corresponding ID for a given topic
-func getIdFromTopic(topic string) int {
+func getIdFromTopic(topic string) uint32 {
 	return pairFromTopic[topic].canId
 }
 
@@ -182,11 +187,11 @@ func getConvModeFromTopic(topic string) string {
 }
 
 // get the convertMode for a given ID
-func getConvModeFromId(canId int) string {
+func getConvModeFromId(canId uint32) string {
 	return pairFromID[canId].convMethod
 }
 
 // get the corresponding topic for an ID
-func getTopicFromId(canId int) string {
+func getTopicFromId(canId uint32) string {
 	return pairFromID[canId].mqttTopic
 }

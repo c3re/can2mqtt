@@ -75,7 +75,7 @@ func mqttUnsubscribe(topic string) {
 }
 
 // publish a new message
-func mqttPublish(topic string, payload string) {
+func mqttPublish(topic string, payload []byte) {
 	if dbg {
 		fmt.Printf("mqtthandler: sending message: \"%s\" to topic: \"%s\"\n", payload, topic)
 	}

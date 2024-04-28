@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"github.com/brutella/can"
 	"strconv"
 	"strings"
 )
@@ -15,6 +14,7 @@ import (
 // 3. execute conversion
 // 4. build CANFrame
 // 5. returning the CANFrame
+/*
 func convert2CAN(topic, payload string) can.Frame {
 	//convertMethod := getConvModeFromTopic(topic)
 	//var Id = uint32(getIdFromTopic(topic))
@@ -26,7 +26,6 @@ func convert2CAN(topic, payload string) can.Frame {
 		return can.Frame{}
 	}
 	return frame
-	/*
 		if convertMethod == "none" {
 			if dbg {
 				fmt.Printf("convertfunctions: using convertmode none (reverse of %s)\n", convertMethod)
@@ -202,8 +201,8 @@ func convert2CAN(topic, payload string) can.Frame {
 		}
 		myFrame := can.Frame{ID: Id, Length: length, Data: data}
 		return myFrame
-	*/
 }
+*/
 
 // convert2MQTT does the following
 // 1. receive ID and payload
@@ -211,81 +210,91 @@ func convert2CAN(topic, payload string) can.Frame {
 // 3. executing conversion
 // 4. building a string
 // 5. return
+/*
 func convert2MQTT(id int, length int, payload [8]byte) string {
-	convertMethod := getConvModeFromId(id)
-	if convertMethod == "none" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode none\n")
-		}
-		return bytes2ascii(uint32(length), payload)
-	} else if convertMethod == "16bool2ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode 16bool2ascii\n")
-		}
-		return bool2ascii(payload[0:2])
-	} else if convertMethod == "uint82ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode uint82ascii\n")
-		}
-		return uint82ascii(payload[0])
-	} else if convertMethod == "uint162ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode uint162ascii\n")
-		}
-		return uint162ascii(payload[0:2])
-	} else if convertMethod == "uint322ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode uint322ascii\n")
-		}
-		return uint322ascii(payload[0:4])
-	} else if convertMethod == "uint642ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode uint642ascii\n")
-		}
-		return uint642ascii(payload[0:8])
-	} else if convertMethod == "2uint322ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode 2uint322ascii\n")
-		}
-		return uint322ascii(payload[0:4]) + " " + uint322ascii(payload[4:8])
-	} else if convertMethod == "4uint162ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode 4uint162ascii\n")
-		}
-		return uint162ascii(payload[0:2]) + " " + uint162ascii(payload[2:4]) + " " + uint162ascii(payload[4:6]) + " " + uint162ascii(payload[6:8])
-	} else if convertMethod == "4int162ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode 4int162ascii\n")
-		}
-		return int162ascii(payload[0:2]) + " " + int162ascii(payload[2:4]) + " " + int162ascii(payload[4:6]) + " " + int162ascii(payload[6:8])
-	} else if convertMethod == "4uint82ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode 4uint82ascii\n")
-		}
-		return uint82ascii(payload[0]) + " " + uint82ascii(payload[2]) + " " + uint82ascii(payload[4]) + " " + uint82ascii(payload[6])
-	} else if convertMethod == "8uint82ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode 8uint82ascii\n")
-		}
-		return uint82ascii(payload[0]) + " " + uint82ascii(payload[1]) + " " + uint82ascii(payload[2]) + " " + uint82ascii(payload[3]) + " " + uint82ascii(payload[4]) + " " + uint82ascii(payload[5]) + " " + uint82ascii(payload[6]) + " " + uint82ascii(payload[7])
-	} else if convertMethod == "pixelbin2ascii" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode pixelbin2ascii\n")
-		}
-		return uint82ascii(payload[0]) + " " + bytecolor2colorcode(payload[1:4])
-	} else if convertMethod == "bytecolor2colorcode" {
-		if dbg {
-			fmt.Printf("convertfunctions: using convertmode bytecolor2colorcode\n")
-		}
-		return bytecolor2colorcode(payload[0:2])
-
-	} else {
-		if dbg {
-			fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
-		}
-		return bytes2ascii(uint32(length), payload)
+	//convertMethod := getConvModeFromId(id)
+	output, err := pairFromID[id].toMqtt(can.Frame{ID: uint32(id), Data: payload, Length: uint8(length)})
+	if err != nil {
+		fmt.Printf("Error:", err)
+		return ""
 	}
+	return output
+
+		if convertMethod == "none" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode none\n")
+			}
+			return bytes2ascii(uint32(length), payload)
+		} else if convertMethod == "16bool2ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode 16bool2ascii\n")
+			}
+			return bool2ascii(payload[0:2])
+		} else if convertMethod == "uint82ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode uint82ascii\n")
+			}
+			return uint82ascii(payload[0])
+		} else if convertMethod == "uint162ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode uint162ascii\n")
+			}
+			return uint162ascii(payload[0:2])
+		} else if convertMethod == "uint322ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode uint322ascii\n")
+			}
+			return uint322ascii(payload[0:4])
+		} else if convertMethod == "uint642ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode uint642ascii\n")
+			}
+			return uint642ascii(payload[0:8])
+		} else if convertMethod == "2uint322ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode 2uint322ascii\n")
+			}
+			return uint322ascii(payload[0:4]) + " " + uint322ascii(payload[4:8])
+		} else if convertMethod == "4uint162ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode 4uint162ascii\n")
+			}
+			return uint162ascii(payload[0:2]) + " " + uint162ascii(payload[2:4]) + " " + uint162ascii(payload[4:6]) + " " + uint162ascii(payload[6:8])
+		} else if convertMethod == "4int162ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode 4int162ascii\n")
+			}
+			return int162ascii(payload[0:2]) + " " + int162ascii(payload[2:4]) + " " + int162ascii(payload[4:6]) + " " + int162ascii(payload[6:8])
+		} else if convertMethod == "4uint82ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode 4uint82ascii\n")
+			}
+			return uint82ascii(payload[0]) + " " + uint82ascii(payload[2]) + " " + uint82ascii(payload[4]) + " " + uint82ascii(payload[6])
+		} else if convertMethod == "8uint82ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode 8uint82ascii\n")
+			}
+			return uint82ascii(payload[0]) + " " + uint82ascii(payload[1]) + " " + uint82ascii(payload[2]) + " " + uint82ascii(payload[3]) + " " + uint82ascii(payload[4]) + " " + uint82ascii(payload[5]) + " " + uint82ascii(payload[6]) + " " + uint82ascii(payload[7])
+		} else if convertMethod == "pixelbin2ascii" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode pixelbin2ascii\n")
+			}
+			return uint82ascii(payload[0]) + " " + bytecolor2colorcode(payload[1:4])
+		} else if convertMethod == "bytecolor2colorcode" {
+			if dbg {
+				fmt.Printf("convertfunctions: using convertmode bytecolor2colorcode\n")
+			}
+			return bytecolor2colorcode(payload[0:2])
+
+		} else {
+			if dbg {
+				fmt.Printf("convertfunctions: convertmode %s not found. using fallback none\n", convertMethod)
+			}
+			return bytes2ascii(uint32(length), payload)
+		}
+
 }
+*/
 
 //######################################################################
 //#				NONE				       #
