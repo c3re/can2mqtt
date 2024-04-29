@@ -9,7 +9,7 @@ import (
 )
 
 func SixteenBool2AsciiToCan(input []byte) (can.Frame, error) {
-	splitInput := strings.Split(string(input), " ")
+	splitInput := strings.Split(string(input), " ") // TODO use strings.Fields here
 	if len(splitInput) != 16 {
 		return can.Frame{}, errors.New("input does not contain exactly 16 numbers seperated by spaces")
 	}

@@ -180,6 +180,14 @@ func readC2MPFromFile(filename string) {
 				toCan:      convertfunctions.Uint642AsciiToCan,
 				toMqtt:     convertfunctions.Uint642AsciiToMqtt,
 			}
+		case "2uint322ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.TwoUint322AsciiToCan,
+				toMqtt:     convertfunctions.TwoUint322AsciiToMqtt,
+			}
 		default:
 			pairFromID[canID] = &can2mqtt{
 				canId:      canID,
