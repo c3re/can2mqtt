@@ -16,6 +16,11 @@ import (
 type convertToCan func(input []byte) (can.Frame, error)
 type convertToMqtt func(input can.Frame) ([]byte, error)
 
+type ConvertMode interface {
+	convertToCan
+	convertToMqtt
+}
+
 // can2mqtt is a struct that represents the internal type of
 // one line of the can2mqtt.csv file. It has
 // the same three fields as the can2mqtt.csv file: CAN-ID,
@@ -187,6 +192,30 @@ func readC2MPFromFile(filename string) {
 				mqttTopic:  topic,
 				toCan:      convertfunctions.TwoUint322AsciiToCan,
 				toMqtt:     convertfunctions.TwoUint322AsciiToMqtt,
+			}
+		case "4uint162ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourUint162AsciiToCan,
+				toMqtt:     convertfunctions.FourUint162AsciiToMqtt,
+			}
+		case "4uint82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourUint82AsciiToCan,
+				toMqtt:     convertfunctions.FourUint82AsciiToMqtt,
+			}
+		case "8uint82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.EightUint82AsciiToCan,
+				toMqtt:     convertfunctions.EightUint82AsciiToMqtt,
 			}
 		default:
 			pairFromID[canID] = &can2mqtt{
