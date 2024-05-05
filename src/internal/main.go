@@ -217,6 +217,71 @@ func readC2MPFromFile(filename string) {
 				toCan:      convertfunctions.EightUint82AsciiToCan,
 				toMqtt:     convertfunctions.EightUint82AsciiToMqtt,
 			}
+			// Int methodes come here now
+		case "int82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int82AsciiToCan,
+				toMqtt:     convertfunctions.Int82AsciiToMqtt,
+			}
+		case "int162ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int162AsciiToCan,
+				toMqtt:     convertfunctions.Int162AsciiToMqtt,
+			}
+		case "int322ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int322AsciiToCan,
+				toMqtt:     convertfunctions.Int322AsciiToMqtt,
+			}
+		case "int642ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int642AsciiToCan,
+				toMqtt:     convertfunctions.Int642AsciiToMqtt,
+			}
+		case "2int322ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.TwoInt322AsciiToCan,
+				toMqtt:     convertfunctions.TwoInt322AsciiToMqtt,
+			}
+		case "4int162ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourInt162AsciiToCan,
+				toMqtt:     convertfunctions.FourInt162AsciiToMqtt,
+			}
+		case "4int82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourInt82AsciiToCan,
+				toMqtt:     convertfunctions.FourInt82AsciiToMqtt,
+			}
+		case "8int82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.EightInt82AsciiToCan,
+				toMqtt:     convertfunctions.EightInt82AsciiToMqtt,
+			}
 		default:
 			pairFromID[canID] = &can2mqtt{
 				canId:      canID,
