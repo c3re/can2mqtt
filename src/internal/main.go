@@ -4,24 +4,36 @@ import (
 	"bufio"        // Reader
 	"encoding/csv" // CSV Management
 	"fmt"          // print :)
-	"io"           // EOF const
-	"log"          // error management
-	"os"           // open files
-	"strconv"      // parse strings
+	"github.com/brutella/can"
+	"github.com/c3re/can2mqtt/internal/convertfunctions"
+	"io"      // EOF const
+	"log"     // error management
+	"os"      // open files
+	"strconv" // parse strings
 	"sync"
 )
+
+type convertToCan func(input []byte) (can.Frame, error)
+type convertToMqtt func(input can.Frame) ([]byte, error)
+
+type ConvertMode interface {
+	convertToCan
+	convertToMqtt
+}
 
 // can2mqtt is a struct that represents the internal type of
 // one line of the can2mqtt.csv file. It has
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
-	canId      int
+	canId      uint32
 	convMethod string
+	toCan      convertToCan
+	toMqtt     convertToMqtt
 	mqttTopic  string
 }
 
-var pairFromID map[int]*can2mqtt       // c2m pair (lookup from ID)
+var pairFromID map[uint32]*can2mqtt    // c2m pair (lookup from ID)
 var pairFromTopic map[string]*can2mqtt // c2m pair (lookup from Topic)
 var dbg = false                        // verbose on off [-v]
 var ci = "can0"                        // the CAN-Interface [-c]
@@ -113,7 +125,7 @@ func readC2MPFromFile(filename string) {
 	}
 
 	r := csv.NewReader(bufio.NewReader(file))
-	pairFromID = make(map[int]*can2mqtt)
+	pairFromID = make(map[uint32]*can2mqtt)
 	pairFromTopic = make(map[string]*can2mqtt)
 	for {
 		record, err := r.Read()
@@ -121,20 +133,183 @@ func readC2MPFromFile(filename string) {
 		if err == io.EOF {
 			break
 		}
-		canID, err := strconv.Atoi(record[0])
+		tmp, err := strconv.ParseUint(record[0], 10, 32)
+		if err != nil {
+			fmt.Printf("Error while converting can-ID: %s :%s\n", record[0], err.Error())
+			continue
+		}
+		canID := uint32(tmp)
 		convMode := record[1]
 		topic := record[2]
 		if isInSlice(canID, topic) {
 			panic("main: each ID and each topic is only allowed once!")
 		}
-		pairFromID[canID] = &can2mqtt{
-			canId:      canID,
-			convMethod: convMode,
-			mqttTopic:  topic,
+		switch convMode {
+		case "16bool2ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.SixteenBool2AsciiToCan,
+				toMqtt:     convertfunctions.SixteenBool2AsciiToMqtt,
+			}
+		case "uint82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Uint82AsciiToCan,
+				toMqtt:     convertfunctions.Uint82AsciiToMqtt,
+			}
+		case "uint162ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Uint162AsciiToCan,
+				toMqtt:     convertfunctions.Uint162AsciiToMqtt,
+			}
+		case "uint322ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Uint322AsciiToCan,
+				toMqtt:     convertfunctions.Uint322AsciiToMqtt,
+			}
+		case "uint642ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Uint642AsciiToCan,
+				toMqtt:     convertfunctions.Uint642AsciiToMqtt,
+			}
+		case "2uint322ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.TwoUint322AsciiToCan,
+				toMqtt:     convertfunctions.TwoUint322AsciiToMqtt,
+			}
+		case "4uint162ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourUint162AsciiToCan,
+				toMqtt:     convertfunctions.FourUint162AsciiToMqtt,
+			}
+		case "4uint82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourUint82AsciiToCan,
+				toMqtt:     convertfunctions.FourUint82AsciiToMqtt,
+			}
+		case "8uint82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.EightUint82AsciiToCan,
+				toMqtt:     convertfunctions.EightUint82AsciiToMqtt,
+			}
+			// Int methodes come here now
+		case "int82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int82AsciiToCan,
+				toMqtt:     convertfunctions.Int82AsciiToMqtt,
+			}
+		case "int162ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int162AsciiToCan,
+				toMqtt:     convertfunctions.Int162AsciiToMqtt,
+			}
+		case "int322ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int322AsciiToCan,
+				toMqtt:     convertfunctions.Int322AsciiToMqtt,
+			}
+		case "int642ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.Int642AsciiToCan,
+				toMqtt:     convertfunctions.Int642AsciiToMqtt,
+			}
+		case "2int322ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.TwoInt322AsciiToCan,
+				toMqtt:     convertfunctions.TwoInt322AsciiToMqtt,
+			}
+		case "4int162ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourInt162AsciiToCan,
+				toMqtt:     convertfunctions.FourInt162AsciiToMqtt,
+			}
+		case "4int82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.FourInt82AsciiToCan,
+				toMqtt:     convertfunctions.FourInt82AsciiToMqtt,
+			}
+		case "8int82ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.EightInt82AsciiToCan,
+				toMqtt:     convertfunctions.EightInt82AsciiToMqtt,
+			}
+		case "bytecolor2colorcode":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.ByteColor2ColorCodeToCan,
+				toMqtt:     convertfunctions.ByteColor2ColorCodeToMqtt,
+			}
+		case "pixelbin2ascii":
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.PixelBin2AsciiToCan,
+				toMqtt:     convertfunctions.PixelBin2AsciiToMqtt,
+			}
+		default:
+			pairFromID[canID] = &can2mqtt{
+				canId:      canID,
+				convMethod: convMode,
+				mqttTopic:  topic,
+				toCan:      convertfunctions.NoneToCan,
+				toMqtt:     convertfunctions.NoneToMqtt,
+			}
 		}
 		pairFromTopic[topic] = pairFromID[canID]
-		mqttSubscribe(topic)        // TODO move to append function
-		canSubscribe(uint32(canID)) // TODO move to append function
+		mqttSubscribe(topic) // TODO move to append function
+		canSubscribe(canID)  // TODO move to append function
 	}
 	if dbg {
 		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
@@ -146,7 +321,7 @@ func readC2MPFromFile(filename string) {
 }
 
 // check function to check if a topic or an ID is in the slice
-func isInSlice(canId int, mqttTopic string) bool {
+func isInSlice(canId uint32, mqttTopic string) bool {
 	if pairFromID[canId] != nil {
 		if dbg {
 			fmt.Printf("main: The ID %d or the Topic %s is already in the list!\n", canId, mqttTopic)
@@ -163,7 +338,7 @@ func isInSlice(canId int, mqttTopic string) bool {
 }
 
 // get the corresponding ID for a given topic
-func getIdFromTopic(topic string) int {
+func getIdFromTopic(topic string) uint32 {
 	return pairFromTopic[topic].canId
 }
 
@@ -173,11 +348,11 @@ func getConvModeFromTopic(topic string) string {
 }
 
 // get the convertMode for a given ID
-func getConvModeFromId(canId int) string {
+func getConvModeFromId(canId uint32) string {
 	return pairFromID[canId].convMethod
 }
 
 // get the corresponding topic for an ID
-func getTopicFromId(canId int) string {
+func getTopicFromId(canId uint32) string {
 	return pairFromID[canId].mqttTopic
 }
