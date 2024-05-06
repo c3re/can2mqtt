@@ -1,7 +1,5 @@
 # can2mqtt
-
-
-can2mqtt is a small piece of software written in Go. Its purpose is to be a bridge between a CAN-Bus and a MQTT-Broker. Those are completely different worlds but they have similiaritys in the way they are built. I think i don't have to speak about the differences so i will just pick up the similiarities: In the CAN-world you have so called CAN-Frames. Each CAN-Frame can contain up to eight bytes of payload and CAN-Frame has an ID. In the MQTT-world you have topics and messages. Each message has a specific topic. As you can see it should be possible to map CAN-IDs to MQTT-Topics and their respective payload to messages. That's what this little programm does.
+can2mqtt connects a CAN-Bus to an MQTT broker and vice versa. You create pairs of CAN-Bus IDs and MQTT topics and choose a conversion mode between them. 
 
 Here you can see can2mqtt in action:
 [![can2mqtt demo](screenshot.png)](https://asciinema.org/a/542608?autoplay=1)
@@ -10,7 +8,7 @@ Here you can see can2mqtt in action:
 can2mqtt is written in Go and static linked binaries are available [here](https://github.com/c3re/can2mqtt/releases/latest).
 can2mqtt has no further dependencies. On a Raspberry for example it should be enough to run:
 ```
-wget https://github.com/c3re/can2mqtt/releases/download/v1.3.0/can2mqtt-v1.3.0-linux-arm -O can2mqtt
+wget https://github.com/c3re/can2mqtt/releases/download/v2.0.0/can2mqtt-v2.0.0-linux-arm -O can2mqtt
 chmod +x can2mqtt
 ./can2mqtt
 ```
@@ -21,15 +19,14 @@ The commandline parameters are the following:
  ./can2mqtt -f <can2mqtt.csv> -c <can-interface> -m <mqtt-connectstring> [-v]
  ```
  
-Where can2mqtt.csv is the file for the configuration of can and mqtt pairs, can-interface is a socketcan interface and mqtt-connectstring is string that is accepted by the eclipse paho mqtt client. An additional -v flag can be passed to get verbose debug output. Here an example that runs on our Raspberry Pi @c3RE:
+Where can2mqtt.csv is the file for the configuration of can and mqtt pairs, can-interface is a socketcan interface and mqtt-connectstring is string that is accepted by the eclipse paho mqtt client. An additional -v flag can be passed to get verbose debug output. Example:
 ```
 ./can2mqtt -f /etc/can2mqtt.csv -c can0 -m tcp://127.0.0.1:1883
 ```
 ## can2mqtt.csv
 The file can2mqtt.csv has three columns. In the first column you need to specify the CAN-ID as a decimal number. In the second column you have to specify the convert-mode. You can find a list of available convert-modes below. In the last column you have to specify the MQTT-Topic. Each CAN-ID and each MQTT-Topic is allowed to appear only once in the whole file.
 
-Here again the example from the Pi@c3RE:
-
+Example:
 ```
 112,none,huette/all/a03/door/sensors/opened
 113,2uint322ascii,huette/all/000/ccu/sensors/time
@@ -73,3 +70,13 @@ Here they are:
 | `int322ascii`         | one int32 in the CAN-Frame to one int32 as string in the mqtt payload                                                                                                                                                                                                  |
 | `2int322ascii`        | two int32 in the CAN-Frame to two int32 as string seperated by spaces in the mqtt payload.                                                                                                                                                                             |
 | `int642ascii`         | one int64 in the CAN-Frame to one int64 as string in the mqtt payload                                                                                                                                                                                                  |
+
+
+## Unidirectional Mode
+Normally can2mqtt works in bidirectional mode, that means all messages von can are send to mqtt and vice versa. If you wish you can run can2mqtt in a unidirectional mode to only send messages from can to mqtt or only mqtt to can. To do so you have to use the flag `-d` with one fo the following settings:
+
+|dirMode|effect|
+|--|--|
+|0|bidirectional mode, messages will be send from can to mqtt and vice versa |
+|1|unidirectional mode, messages will only be send from CAN-Bus to mqtt broker|
+|2|unidirectional mode, messages will only be send from mqtt broker to the CAN-Bus|
