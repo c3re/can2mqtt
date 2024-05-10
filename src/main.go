@@ -13,12 +13,15 @@ import (
 	"sync"
 )
 
-var pairFromID map[uint32]*can2mqtt    // c2m pair (lookup from ID)
-var pairFromTopic map[string]*can2mqtt // c2m pair (lookup from Topic)
-var debugLog bool
-var canInterface, mqttConnection, configFile string
-var dirMode = 0 // directional modes: 0=bidirectional 1=can2mqtt only 2=mqtt2can only [-d]
-var wg sync.WaitGroup
+var (
+	pairFromID                               map[uint32]*can2mqtt // c2m pair (lookup from ID)
+	pairFromTopic                            map[string]*can2mqtt // c2m pair (lookup from Topic)
+	debugLog                                 bool
+	canInterface, mqttConnection, configFile string
+	version                                  = "dev"
+	dirMode                                  = 0 // directional modes: 0=bidirectional 1=can2mqtt only 2=mqtt2can only [-d]
+	wg                                       sync.WaitGroup
+)
 
 func main() {
 	log.SetFlags(0)
@@ -38,7 +41,7 @@ func main() {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	}
 
-	slog.Info("Starting can2mqtt", "mqtt-config", mqttConnection, "can-interface", canInterface, "can2mqtt.csv", configFile, "dir-mode", dirMode, "debug", debugLog)
+	slog.Info("Starting can2mqtt", "version", version, "mqtt-config", mqttConnection, "can-interface", canInterface, "can2mqtt.csv", configFile, "dir-mode", dirMode, "debug", debugLog)
 	wg.Add(1)
 	go canStart(canInterface) // epic parallel shit ;-)
 	mqttStart(mqttConnection)
