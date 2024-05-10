@@ -79,7 +79,7 @@ func FourUint162AsciiToMqtt(input can.Frame) ([]byte, error) {
 // numberAmount*numberWidth shall not be larger than 64
 // input has to contain the data that shall be converted. The input is split at whitespaces, the amount of fields has
 // to match numberAmount.
-// If the amount of fields matches, each field is converted to a uint of size numberWidth. The results are then added to the CAN-frame.
+// If the amount of fields matches, each field is converted to an uint of size numberWidth. The results are then added to the CAN-frame.
 func NUintM2AsciiToCan(numberAmount, numberWidth uint, input []byte) (can.Frame, error) {
 	if !(numberWidth == 8 || numberWidth == 16 || numberWidth == 32 || numberWidth == 64) {
 
@@ -139,7 +139,7 @@ func NUintM2AsciiToMqtt(numberAmount, numberWidth uint, input can.Frame) ([]byte
 	for i := uint(0); i < numberAmount; i++ {
 		switch numberWidth {
 		case 64:
-			returnStrings = append(returnStrings, strconv.FormatUint(uint64(binary.LittleEndian.Uint64(input.Data[i*bytePerNumber:(i+1)*bytePerNumber])), 10))
+			returnStrings = append(returnStrings, strconv.FormatUint(binary.LittleEndian.Uint64(input.Data[i*bytePerNumber:(i+1)*bytePerNumber]), 10))
 		case 32:
 			returnStrings = append(returnStrings, strconv.FormatUint(uint64(binary.LittleEndian.Uint32(input.Data[i*bytePerNumber:(i+1)*bytePerNumber])), 10))
 		case 16:

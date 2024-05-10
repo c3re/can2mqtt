@@ -41,7 +41,7 @@ Example:
 123,uint322ascii,huette/all/000/airmonitor/sensors/pm10
 ```
 
-Explanation for the 1st Line: For example our Doorstatus is published on the CAN-Bus every second with the CAN-ID 112 (decimal). can2mqtt will take everything thats published there and will push it through to mqtt-topic huette/all/a03/door/sensors/opened.
+Explanation for the 1st Line: For example our Doorstatus is published on the CAN-Bus every second with the CAN-ID 112 (decimal). can2mqtt will take everything that is published there and will push it through to mqtt-topic huette/all/a03/door/sensors/opened.
 
 ## convert-modes
 Here they are:

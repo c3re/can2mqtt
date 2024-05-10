@@ -1,8 +1,9 @@
 package internal
 
 import (
-	"fmt"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"log/slog"
+	"os"
 	"strings"
 )
 
@@ -17,16 +18,10 @@ func mqttStart(suppliedString string) {
 		// looks like authentication is required for this server
 		userPasswordHost := strings.TrimPrefix(suppliedString, "tcp://")
 		userPassword, host, found := strings.Cut(userPasswordHost, "@")
-		if !found {
-			fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
-			fmt.Println("suppliedString: ", suppliedString)
-			fmt.Println("userPasswordHost: ", userPasswordHost)
-		}
 		user, pw, found = strings.Cut(userPassword, ":")
 		if !found {
-			fmt.Println("Whoops, there is an issue with your MQTT-connectString:")
-			fmt.Println("suppliedString: ", suppliedString)
-			fmt.Println("userPasswordHost: ", userPasswordHost)
+			slog.Error("mqtt: missing colon(:) between username and password", "connect string", suppliedString)
+			os.Exit(1)
 		}
 		connectString = "tcp://" + host
 	}
@@ -37,16 +32,12 @@ func mqttStart(suppliedString string) {
 		clientSettings.SetCredentialsProvider(userPwCredProv)
 	}
 	client = MQTT.NewClient(clientSettings)
-	if dbg {
-		fmt.Printf("mqtthandler: starting connection to: %s\n", connectString)
-	}
+	slog.Debug("mqtt: starting connection", "connectString", connectString)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		fmt.Println("mqttHandler: Oh no an error occurred...")
-		panic(token.Error())
+		slog.Error("mqtt: could not connect to mqtt", "error", token.Error())
+		os.Exit(1)
 	}
-	if dbg {
-		fmt.Printf("mqttHandler: connection established!\n")
-	}
+	slog.Info("mqtt: connected to mqtt")
 }
 
 // credentialsProvider
@@ -57,33 +48,25 @@ func userPwCredProv() (username, password string) {
 // subscribe to a new topic
 func mqttSubscribe(topic string) {
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		fmt.Printf("mqtthandler: error while subscribing: %s\n", topic)
+		slog.Error("mqtt: error subscribing", "error", token.Error())
 	}
-	if dbg {
-		fmt.Printf("mqtthandler: successfully subscribed: %s\n", topic)
-	}
+	slog.Debug("mqtt: subscribed", "topic", topic)
 }
 
 // unsubscribe a topic
 func mqttUnsubscribe(topic string) {
 	if token := client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
-		fmt.Printf("mqtthandler: Error while unsuscribing :%s\n", topic)
+		slog.Error("mqtt: error unsubscribing", "error", token.Error())
 	}
-	if dbg {
-		fmt.Printf("mqtthandler: successfully unsubscribed %s\n", topic)
-	}
+	slog.Debug("mqtt: unsubscribed", "topic", topic)
 }
 
 // publish a new message
 func mqttPublish(topic string, payload []byte) {
-	if dbg {
-		fmt.Printf("mqtthandler: sending message: \"%s\" to topic: \"%s\"\n", payload, topic)
-	}
 	mqttUnsubscribe(topic)
+	slog.Debug("mqtt: publishing message", "payload", payload, "topic", topic)
 	token := client.Publish(topic, 0, false, payload)
 	token.Wait()
-	if dbg {
-		fmt.Printf("mqtthandler: message was transmitted successfully!.\n")
-	}
+	slog.Debug("mqtt: published message", "payload", payload, "topic", topic)
 	mqttSubscribe(topic)
 }

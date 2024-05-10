@@ -39,10 +39,10 @@ func main() {
 
 // help function (obvious...)
 func printHelp() {
-	fmt.Printf("welcome to the CAN2MQTT bridge!\n\n")
-	fmt.Printf("Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h] [-d <dirMode>]\n")
-	fmt.Printf("<file>: a can2mqtt.csv file\n")
-	fmt.Printf("<CAN-Interface>: a CAN-Interface e.g. can0\n")
-	fmt.Printf("<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://[user:pass@]localhost:1883\n")
-	fmt.Printf("<dirMode>: directional Mode 0 = bidirectional, 1 = can2mqtt only, 2 = mqtt2can only\n")
+	_, _ = fmt.Fprintf(os.Stderr, "welcome to the CAN2MQTT bridge!\n\n")
+	_, _ = fmt.Fprintf(os.Stderr, "Usage: can2mqtt [-f <file>] [-c <CAN-Interface>] [-m <MQTT-Connect>] [-v] [-h] [-d <dirMode>]\n")
+	_, _ = fmt.Fprintf(os.Stderr, "<file>: a can2mqtt.csv file\n")
+	_, _ = fmt.Fprintf(os.Stderr, "<CAN-Interface>: a CAN-Interface e.g. can0\n")
+	_, _ = fmt.Fprintf(os.Stderr, "<MQTT-Connect>: connectstring for MQTT. e.g.: tcp://[user:pass@]localhost:1883\n")
+	_, _ = fmt.Fprintf(os.Stderr, "<dirMode>: directional Mode 0 = bidirectional, 1 = can2mqtt only, 2 = mqtt2can only\n")
 }
