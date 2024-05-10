@@ -79,7 +79,7 @@ func FourInt162AsciiToMqtt(input can.Frame) ([]byte, error) {
 // numberAmount*numberWidth shall not be larger than 64
 // input has to contain the data that shall be converted. The input is split at whitespaces, the amount of fields has
 // to match numberAmount.
-// If the amount of fields matches, each field is converted to a uint of size numberWidth. The results are then added to the CAN-frame.
+// If the amount of fields matches, each field is converted to an uint of size numberWidth. The results are then added to the CAN-frame.
 func NIntM2AsciiToCan(numberAmount, numberWidth uint, input []byte) (can.Frame, error) {
 	if !(numberWidth == 8 || numberWidth == 16 || numberWidth == 32 || numberWidth == 64) {
 

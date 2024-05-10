@@ -39,7 +39,7 @@ func handleMQTT(_ MQTT.Client, msg MQTT.Message) {
 			slog.Warn("receivehandler: conversion to CAN-Frame unsuccessful", "convertmode", pairFromTopic[msg.Topic()].convMethod, "error", err)
 			return
 		}
-		cf.ID = uint32(pairFromTopic[msg.Topic()].canId)
+		cf.ID = pairFromTopic[msg.Topic()].canId
 		canPublish(cf)
 		slog.Info("CAN <- MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", pairFromTopic[msg.Topic()].convMethod, "topic", msg.Topic(), "message", msg.Payload())
 	}

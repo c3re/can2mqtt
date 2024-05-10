@@ -26,7 +26,7 @@ func PixelBin2AsciiToCan(input []byte) (can.Frame, error) {
 	if err != nil {
 		return can.Frame{}, errors.New(fmt.Sprintf("Error while converting: %s", err.Error()))
 	}
-	var returner can.Frame = can.Frame{Length: 4}
+	var returner = can.Frame{Length: 4}
 	returner.Data[0] = uint8(number)
 	copy(res, returner.Data[1:4])
 	return returner, nil
