@@ -11,12 +11,12 @@ import (
 // 1. calling standard convert function: convert2MQTT
 // 2. sending the message
 func handleCAN(cf can.Frame) {
-	slog.Debug("receivehandler: received CANFrame", "id", cf.ID, "len", cf.Length, "data", cf.Data)
+	slog.Debug("received CANFrame", "id", cf.ID, "len", cf.Length, "data", cf.Data)
 	// Only do conversions when necessary
 	if dirMode != 2 {
 		mqttPayload, err := pairFromID[cf.ID].toMqtt(cf)
 		if err != nil {
-			slog.Warn("receivehandler: conversion to MQTT message unsuccessful", "convertmode", pairFromID[cf.ID].convMethod, "error", err)
+			slog.Warn("conversion to MQTT message unsuccessful", "convertmode", pairFromID[cf.ID].convMethod, "error", err)
 			return
 		}
 		topic := getTopicFromId(cf.ID)
@@ -31,12 +31,12 @@ func handleCAN(cf can.Frame) {
 // 1. calling the standard convert function: convert2CAN
 // 2. sending the message
 func handleMQTT(_ MQTT.Client, msg MQTT.Message) {
-	slog.Debug("receivehandler: received message", "topic", msg.Topic(), "payload", msg.Payload())
+	slog.Debug("received message", "topic", msg.Topic(), "payload", msg.Payload())
 
 	if dirMode != 1 {
 		cf, err := pairFromTopic[msg.Topic()].toCan(msg.Payload())
 		if err != nil {
-			slog.Warn("receivehandler: conversion to CAN-Frame unsuccessful", "convertmode", pairFromTopic[msg.Topic()].convMethod, "error", err)
+			slog.Warn("conversion to CAN-Frame unsuccessful", "convertmode", pairFromTopic[msg.Topic()].convMethod, "error", err)
 			return
 		}
 		cf.ID = pairFromTopic[msg.Topic()].canId

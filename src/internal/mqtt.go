@@ -20,7 +20,7 @@ func mqttStart(suppliedString string) {
 		userPassword, host, found := strings.Cut(userPasswordHost, "@")
 		user, pw, found = strings.Cut(userPassword, ":")
 		if !found {
-			slog.Error("mqtthandler: missing colon(:) between username and password", "connect string", suppliedString)
+			slog.Error("mqtt: missing colon(:) between username and password", "connect string", suppliedString)
 			os.Exit(1)
 		}
 		connectString = "tcp://" + host
@@ -32,12 +32,12 @@ func mqttStart(suppliedString string) {
 		clientSettings.SetCredentialsProvider(userPwCredProv)
 	}
 	client = MQTT.NewClient(clientSettings)
-	slog.Debug("mqtthandler: starting connection", "connectString", connectString)
+	slog.Debug("mqtt: starting connection", "connectString", connectString)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		slog.Error("mqtthandler: could not connect to mqtt", "error", token.Error())
+		slog.Error("mqtt: could not connect to mqtt", "error", token.Error())
 		os.Exit(1)
 	}
-	slog.Info("mqtthandler: connected to mqtt")
+	slog.Info("mqtt: connected to mqtt")
 }
 
 // credentialsProvider
@@ -48,25 +48,25 @@ func userPwCredProv() (username, password string) {
 // subscribe to a new topic
 func mqttSubscribe(topic string) {
 	if token := client.Subscribe(topic, 0, nil); token.Wait() && token.Error() != nil {
-		slog.Error("mqtthandler: error subscribing", "error", token.Error())
+		slog.Error("mqtt: error subscribing", "error", token.Error())
 	}
-	slog.Debug("mqtthandler: subscribed", "topic", topic)
+	slog.Debug("mqtt: subscribed", "topic", topic)
 }
 
 // unsubscribe a topic
 func mqttUnsubscribe(topic string) {
 	if token := client.Unsubscribe(topic); token.Wait() && token.Error() != nil {
-		slog.Error("mqtthandler: error unsubscribing", "error", token.Error())
+		slog.Error("mqtt: error unsubscribing", "error", token.Error())
 	}
-	slog.Debug("mqtthandler: unsubscribed", "topic", topic)
+	slog.Debug("mqtt: unsubscribed", "topic", topic)
 }
 
 // publish a new message
 func mqttPublish(topic string, payload []byte) {
 	mqttUnsubscribe(topic)
-	slog.Debug("mqtthandler: publishing message", "payload", payload, "topic", topic)
+	slog.Debug("mqtt: publishing message", "payload", payload, "topic", topic)
 	token := client.Publish(topic, 0, false, payload)
 	token.Wait()
-	slog.Debug("mqtthandler: published message", "payload", payload, "topic", topic)
+	slog.Debug("mqtt: published message", "payload", payload, "topic", topic)
 	mqttSubscribe(topic)
 }

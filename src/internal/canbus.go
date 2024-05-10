@@ -18,20 +18,20 @@ var bus *can.Bus       // CAN-Bus pointer
 func canStart(canInterface string) {
 
 	var err error
-	slog.Debug("canbushandler: initializing CAN-Bus", "interface", canInterface)
+	slog.Debug("canbus: initializing CAN-Bus", "interface", canInterface)
 	bus, err = can.NewBusForInterfaceWithName(canInterface)
 	if err != nil {
-		slog.Error("canbushandler: error while initializing CAN-Bus", "error", err)
+		slog.Error("canbus: error while initializing CAN-Bus", "error", err)
 		os.Exit(1)
 	}
-	slog.Info("canbushandler: connected to CAN")
-	slog.Debug("canbushandler: registering handler")
+	slog.Info("canbus: connected to CAN")
+	slog.Debug("canbus: registering handler")
 	bus.SubscribeFunc(handleCANFrame)
-	slog.Debug("canbushandler: starting receive loop")
+	slog.Debug("canbus: starting receive loop")
 	// will not return if everything is fine
 	err = bus.ConnectAndPublish()
 	if err != nil {
-		slog.Error("canbushandler: error while processing CAN-Bus", "error", err)
+		slog.Error("canbus: error while processing CAN-Bus", "error", err)
 		os.Exit(1)
 	}
 }
@@ -41,14 +41,14 @@ func handleCANFrame(frame can.Frame) {
 	var idSub = false      // indicates, whether the id was subscribed or not
 	for _, i := range csi {
 		if i == frame.ID {
-			slog.Debug("canbushandler: received subscribed frame", "id", frame.ID)
+			slog.Debug("canbus: received subscribed frame", "id", frame.ID)
 			go handleCAN(frame)
 			idSub = true
 			break
 		}
 	}
 	if !idSub {
-		slog.Debug("canbushandler: ignored unsubscribed frame", "id", frame.ID)
+		slog.Debug("canbus: ignored unsubscribed frame", "id", frame.ID)
 	}
 }
 
@@ -57,12 +57,12 @@ func canSubscribe(id uint32) {
 	csiLock.Lock()
 	csi = append(csi, id)
 	csiLock.Unlock()
-	slog.Debug("canbushandler: successfully subscribed CAN-ID", "id", id)
+	slog.Debug("canbus: successfully subscribed CAN-ID", "id", id)
 }
 
 // expects a CANFrame and sends it
 func canPublish(frame can.Frame) {
-	slog.Debug("canbushandler: sending CAN-Frame", "frame", frame)
+	slog.Debug("canbus: sending CAN-Frame", "frame", frame)
 	// Check if ID is using more than 11-Bits:
 	if frame.ID >= 0x800 {
 		// if so, enable extended frame format
@@ -70,6 +70,6 @@ func canPublish(frame can.Frame) {
 	}
 	err := bus.Publish(frame)
 	if err != nil {
-		slog.Error("canbushandler: error while publishing CAN-Frame", "error", err)
+		slog.Error("canbus: error while publishing CAN-Frame", "error", err)
 	}
 }

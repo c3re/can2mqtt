@@ -103,7 +103,7 @@ func readC2MPFromFile(filename string) {
 
 	file, err := os.Open(filename)
 	if err != nil {
-		slog.Error("main: can2mqtt.csv could not be opened", "filename", filename, "error", err)
+		slog.Error("can2mqtt.csv could not be opened", "filename", filename, "error", err)
 		os.Exit(1)
 	}
 
@@ -118,24 +118,24 @@ func readC2MPFromFile(filename string) {
 			break
 		}
 		if err != nil {
-			slog.Warn("main: skipping line", "filename", filename, "error", err)
+			slog.Warn("skipping line", "filename", filename, "error", err)
 			continue
 		}
 		line, _ := r.FieldPos(0)
 		tmp, err := strconv.ParseUint(record[0], 10, 32)
 		if err != nil {
-			slog.Warn("main: skipping line, malformed can-ID", "error", err, "line", line)
+			slog.Warn("skipping line, malformed can-ID", "error", err, "line", line)
 			continue
 		}
 		canID := uint32(tmp)
 		convMode := record[1]
 		topic := record[2]
 		if isIDInSlice(canID) {
-			slog.Warn("main: skipping line, duplicate ID", "id", canID, "line", line)
+			slog.Warn("skipping line, duplicate ID", "id", canID, "line", line)
 			continue
 		}
 		if isTopicInSlice(topic) {
-			slog.Warn("main: skipping line duplicate topic", "topic", topic, "line", line)
+			slog.Warn("skipping line duplicate topic", "topic", topic, "line", line)
 			continue
 		}
 		switch convMode {
@@ -307,7 +307,7 @@ func readC2MPFromFile(filename string) {
 	}
 
 	for _, c2mp := range pairFromID {
-		slog.Debug("main: extracted pair", "id", c2mp.canId, "convertmode", c2mp.convMethod, "topic", c2mp.mqttTopic)
+		slog.Debug("extracted pair", "id", c2mp.canId, "convertmode", c2mp.convMethod, "topic", c2mp.mqttTopic)
 	}
 }
 
