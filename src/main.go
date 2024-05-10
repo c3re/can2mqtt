@@ -1,11 +1,10 @@
-package internal
+package main
 
 import (
 	"bufio"        // Reader
 	"encoding/csv" // CSV Management
-	"fmt"          // print :)
-	"github.com/brutella/can"
-	"github.com/c3re/can2mqtt/internal/convertfunctions"
+	"flag"
+	"github.com/c3re/can2mqtt/convertfunctions"
 	"io"  // EOF const
 	"log" // error management
 	"log/slog"
@@ -14,86 +13,36 @@ import (
 	"sync"
 )
 
-type convertToCan func(input []byte) (can.Frame, error)
-type convertToMqtt func(input can.Frame) ([]byte, error)
-
-type ConvertMode interface {
-	convertToCan
-	convertToMqtt
-}
-
-// can2mqtt is a struct that represents the internal type of
-// one line of the can2mqtt.csv file. It has
-// the same three fields as the can2mqtt.csv file: CAN-ID,
-// conversion method and MQTT-Topic.
-type can2mqtt struct {
-	canId      uint32
-	convMethod string
-	toCan      convertToCan
-	toMqtt     convertToMqtt
-	mqttTopic  string
-}
-
 var pairFromID map[uint32]*can2mqtt    // c2m pair (lookup from ID)
 var pairFromTopic map[string]*can2mqtt // c2m pair (lookup from Topic)
-var dbg = false                        // verbose on off [-v]
-var ci = "can0"                        // the CAN-Interface [-c]
-var cs = "tcp://localhost:1883"        // mqtt-connect-string [-m]
-var c2mf = "can2mqtt.csv"              // path to the can2mqtt.csv [-f]
-var dirMode = 0                        // directional modes: 0=bidirectional 1=can2mqtt only 2=mqtt2can only [-d]
+var debugLog bool
+var canInterface, mqttConnection, configFile string
+var dirMode = 0 // directional modes: 0=bidirectional 1=can2mqtt only 2=mqtt2can only [-d]
 var wg sync.WaitGroup
 
-// SetDbg decides whether there is really verbose output or
-// just standard information output. Default is false.
-func SetDbg(v bool) {
-	dbg = v
-	slog.SetLogLoggerLevel(slog.LevelDebug)
-}
-
-// SetCi sets the CAN-Interface to use for the CAN side
-// of the bridge. Default is: can0.
-func SetCi(c string) {
-	ci = c
-}
-
-// SetC2mf expects a string which is a path to a can2mqtt.csv file
-// Default is: can2mqtt.csv
-func SetC2mf(f string) {
-	c2mf = f
-}
-
-// SetCs sets the MQTT connect-string which contains: protocol,
-// hostname and port. Default is: tcp://localhost:1883
-func SetCs(s string) {
-	cs = s
-}
-
-// SetConfDirMode sets the dirMode
-func SetConfDirMode(s string) {
-	if s == "0" {
-		dirMode = 0
-	} else if s == "1" {
-		dirMode = 1
-	} else if s == "2" {
-		dirMode = 2
-	} else {
-		_ = fmt.Errorf("error: got invalid value for -d (%s). Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)", s)
-	}
-}
-
-// Start is the function that should be called after debug-level
-// connect-string, can interface and can2mqtt file have been set.
-// Start takes care of everything that happens after that.
-// It starts the CAN-Bus connection and the MQTT-Connection. It
-// parses the can2mqtt.csv file and from there everything takes
-// its course...
-func Start() {
+func main() {
 	log.SetFlags(0)
-	slog.Info("Starting can2mqtt", "mqtt-config", cs, "can-interface", ci, "can2mqtt.csv", c2mf, "dir-mode", dirMode, "debug", dbg)
+
+	flag.BoolVar(&debugLog, "v", false, "show (very) verbose debug log")
+	flag.StringVar(&canInterface, "c", "can0", "which socket-can interface to use")
+	flag.StringVar(&mqttConnection, "m", "tcp://localhost:1883", "which mqtt-broker to use. Example: tcp://user:password@broker.hivemq.com:1883")
+	flag.StringVar(&configFile, "f", "can2mqtt.csv", "which config file to use")
+	flag.IntVar(&dirMode, "d", 0, "direction mode\n0: bidirectional (default)\n1: can2mqtt only\n2: mqtt2can only")
+	flag.Parse()
+
+	if dirMode < 0 || dirMode > 2 {
+		slog.Error("got invalid value for -d. Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)", "d", dirMode)
+	}
+
+	if debugLog {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	}
+
+	slog.Info("Starting can2mqtt", "mqtt-config", mqttConnection, "can-interface", canInterface, "can2mqtt.csv", configFile, "dir-mode", dirMode, "debug", debugLog)
 	wg.Add(1)
-	go canStart(ci) // epic parallel shit ;-)
-	mqttStart(cs)
-	readC2MPFromFile(c2mf)
+	go canStart(canInterface) // epic parallel shit ;-)
+	mqttStart(mqttConnection)
+	readC2MPFromFile(configFile)
 	wg.Wait()
 }
 
