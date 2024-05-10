@@ -5,7 +5,7 @@ import (
 	"encoding/csv" // CSV Management
 	"flag"
 	"fmt" // print :)
-	"github.com/c3re/can2mqtt/internal/convertfunctions"
+	"github.com/c3re/can2mqtt/convertfunctions"
 	"io"  // EOF const
 	"log" // error management
 	"log/slog"
