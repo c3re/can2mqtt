@@ -24,5 +24,6 @@ jobs:
         binary_name: can2mqtt
         compress_assets: false
         project_path: src
+        ldflags: -X "main.version=${{ vars.GITHUB_REF_NAME }}"
       env:
         CGO_ENABLED: 0
