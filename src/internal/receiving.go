@@ -1,4 +1,4 @@
-package internal
+package main
 
 import (
 	"github.com/brutella/can"

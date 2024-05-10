@@ -1,6 +1,4 @@
-// Package internal of c3re/can2mqtt contains some tools for bridging a CAN-Interface
-// and a mqtt-network
-package internal
+package main
 
 import (
 	"github.com/brutella/can"
