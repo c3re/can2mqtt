@@ -4,12 +4,13 @@ import (
 	"bufio"        // Reader
 	"encoding/csv" // CSV Management
 	"fmt"          // print :)
+	"io"           // EOF const
+	"log"          // error management
+	"os"           // open files
+	"strconv"      // parse strings
+	"log/slog"
 	"github.com/brutella/can"
 	"github.com/c3re/can2mqtt/internal/convertfunctions"
-	"io"      // EOF const
-	"log"     // error management
-	"os"      // open files
-	"strconv" // parse strings
 	"sync"
 )
 
@@ -46,6 +47,7 @@ var wg sync.WaitGroup
 // just standard information output. Default is false.
 func SetDbg(v bool) {
 	dbg = v
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 }
 
 // SetCi sets the CAN-Interface to use for the CAN side
@@ -86,28 +88,8 @@ func SetConfDirMode(s string) {
 // parses the can2mqtt.csv file and from there everything takes
 // its course...
 func Start() {
-	fmt.Println("Starting can2mqtt")
-	fmt.Println()
-	fmt.Println("MQTT-Config:  ", cs)
-	fmt.Println("CAN-Config:   ", ci)
-	fmt.Println("can2mqtt.csv: ", c2mf)
-	fmt.Print("dirMode:       ", dirMode, " (")
-	if dirMode == 0 {
-		fmt.Println("bidirectional)")
-	}
-	if dirMode == 1 {
-		fmt.Println("can2mqtt only)")
-	}
-	if dirMode == 2 {
-		fmt.Println("mqtt2can only)")
-	}
-	fmt.Print("Debug-Mode:    ")
-	if dbg {
-		fmt.Println("yes")
-	} else {
-		fmt.Println("no")
-	}
-	fmt.Println()
+	log.SetFlags(0)
+	slog.Info("Starting can2mqtt", "mqtt-config", cs, "can-interface", ci, "can2mqtt.csv", c2mf, "dir-mode", dirMode, "debug", dbg)
 	wg.Add(1)
 	go canStart(ci) // epic parallel shit ;-)
 	mqttStart(cs)
@@ -121,10 +103,12 @@ func readC2MPFromFile(filename string) {
 
 	file, err := os.Open(filename)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("main: can2mqtt.csv could not be opened", "filename", filename, "error", err)
+		os.Exit(1)
 	}
 
 	r := csv.NewReader(bufio.NewReader(file))
+	r.FieldsPerRecord = 3
 	pairFromID = make(map[uint32]*can2mqtt)
 	pairFromTopic = make(map[string]*can2mqtt)
 	for {
@@ -133,16 +117,26 @@ func readC2MPFromFile(filename string) {
 		if err == io.EOF {
 			break
 		}
+		if err != nil {
+			slog.Warn("main: skipping line", "filename", filename, "error", err)
+			continue
+		}
+		line, _ := r.FieldPos(0)
 		tmp, err := strconv.ParseUint(record[0], 10, 32)
 		if err != nil {
-			fmt.Printf("Error while converting can-ID: %s :%s\n", record[0], err.Error())
+			slog.Warn("main: skipping line, malformed can-ID", "error", err, "line", line)
 			continue
 		}
 		canID := uint32(tmp)
 		convMode := record[1]
 		topic := record[2]
-		if isInSlice(canID, topic) {
-			panic("main: each ID and each topic is only allowed once!")
+		if isIDInSlice(canID) {
+			slog.Warn("main: skipping line, duplicate ID", "id", canID, "line", line)
+			continue
+		}
+		if isTopicInSlice(topic) {
+			slog.Warn("main: skipping line duplicate topic", "topic", topic, "line", line)
+			continue
 		}
 		switch convMode {
 		case "16bool2ascii":
@@ -311,30 +305,18 @@ func readC2MPFromFile(filename string) {
 		mqttSubscribe(topic) // TODO move to append function
 		canSubscribe(canID)  // TODO move to append function
 	}
-	if dbg {
-		fmt.Printf("main: the following CAN-MQTT pairs have been extracted:\n")
-		fmt.Printf("main: CAN-ID\t\t conversion mode\t\tMQTT-topic\n")
-		for _, c2mp := range pairFromID {
-			fmt.Printf("main: %d\t\t%s\t\t%s\n", c2mp.canId, c2mp.convMethod, c2mp.mqttTopic)
-		}
+
+	for _, c2mp := range pairFromID {
+		slog.Debug("main: extracted pair", "id", c2mp.canId, "convertmode", c2mp.convMethod, "topic", c2mp.mqttTopic)
 	}
 }
 
-// check function to check if a topic or an ID is in the slice
-func isInSlice(canId uint32, mqttTopic string) bool {
-	if pairFromID[canId] != nil {
-		if dbg {
-			fmt.Printf("main: The ID %d or the Topic %s is already in the list!\n", canId, mqttTopic)
-		}
-		return true
-	}
-	if pairFromTopic[mqttTopic] != nil {
-		if dbg {
-			fmt.Printf("main: The ID %d or the Topic %s is already in the list!\n", canId, mqttTopic)
-		}
-		return true
-	}
-	return false
+func isIDInSlice(canId uint32) bool {
+	return pairFromID[canId] != nil
+}
+
+func isTopicInSlice(mqttTopic string) bool {
+	return pairFromTopic[mqttTopic] != nil
 }
 
 // get the corresponding ID for a given topic
