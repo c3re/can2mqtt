@@ -4,13 +4,13 @@ import (
 	"bufio"        // Reader
 	"encoding/csv" // CSV Management
 	"fmt"          // print :)
-	"io"           // EOF const
-	"log"          // error management
-	"os"           // open files
-	"strconv"      // parse strings
-	"log/slog"
 	"github.com/brutella/can"
 	"github.com/c3re/can2mqtt/internal/convertfunctions"
+	"io"  // EOF const
+	"log" // error management
+	"log/slog"
+	"os"      // open files
+	"strconv" // parse strings
 	"sync"
 )
 
@@ -211,7 +211,7 @@ func readC2MPFromFile(filename string) {
 				toCan:      convertfunctions.EightUint82AsciiToCan,
 				toMqtt:     convertfunctions.EightUint82AsciiToMqtt,
 			}
-			// Int methodes come here now
+			// Int methods come here now
 		case "int82ascii":
 			pairFromID[canID] = &can2mqtt{
 				canId:      canID,
@@ -317,21 +317,6 @@ func isIDInSlice(canId uint32) bool {
 
 func isTopicInSlice(mqttTopic string) bool {
 	return pairFromTopic[mqttTopic] != nil
-}
-
-// get the corresponding ID for a given topic
-func getIdFromTopic(topic string) uint32 {
-	return pairFromTopic[topic].canId
-}
-
-// get the conversion mode for a given topic
-func getConvModeFromTopic(topic string) string {
-	return pairFromTopic[topic].convMethod
-}
-
-// get the convertMode for a given ID
-func getConvModeFromId(canId uint32) string {
-	return pairFromID[canId].convMethod
 }
 
 // get the corresponding topic for an ID
