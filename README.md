@@ -82,11 +82,10 @@ Normally can2mqtt works in bidirectional mode, that means all messages von can a
 | 2       | unidirectional mode, messages will only be send from mqtt broker to the CAN-Bus |
 
 ## Add a convert-Mode
-I noticed people forking this repo and adding their own convert-Modes (which is great by the way). I wanted to make life
-for you a bit easier and added some code-stubs in the repo to quickly write your own convert-Mode. If you want to add
-your own convert-Mode first you have to make up a name. This is the name that you can later refer to when you want to
+
+If you want to add a convert-Mode think about a name. This is the name that you can later refer to when you want to
 use your convert-Mode in the `can2mqtt.csv` config-file. In this example the name of the new convert-Mode is `"mymode"`.
-Next, you have to add the new convert-Mode in the [switch-case block in `src/main.go`](./src/main.go#L247). In the new case
+Next, add the new convert-Mode in the [switch-case block in `src/main.go`](./src/main.go#L247). In the new case
 statement you refer to two functions. One is called when a MQTT-message is received and the other one when a CAN-frame is
 received. Change the contents of those functions to the behaviour that you seek for. Mockup code for `MyModeToCan` and
 `MyModeToMqtt` can be found in [mymode.go](./src/mymode.go). 
