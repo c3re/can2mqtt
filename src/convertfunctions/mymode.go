@@ -7,7 +7,7 @@ import (
 
 const mockErr string = "I am just mockup-code and not supposed to be actually used, implement something useful here"
 
-func YourModeToCan(input []byte) (can.Frame, error) {
+func MyModeToCan(input []byte) (can.Frame, error) {
 	/*
 		This is your area to create your convertMode (Receive MQTT, convert to CAN).
 		You can find the payload of the received MQTT-Message
@@ -26,7 +26,7 @@ func YourModeToCan(input []byte) (can.Frame, error) {
 	return can.Frame{}, errors.New(mockErr)
 }
 
-func YourModeToMqtt(input can.Frame) ([]byte, error) {
+func MyModeToMqtt(input can.Frame) ([]byte, error) {
 	/*
 		This is your area to create your convertMode (Receive CAN, convert to MQTT).
 		You can find the received CAN-Frame in the can.Frame input. You can craft your returning MQTT-Payload here.
