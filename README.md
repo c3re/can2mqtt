@@ -8,7 +8,7 @@ Here you can see can2mqtt in action:
 can2mqtt is written in Go and static linked binaries are available [here](https://github.com/c3re/can2mqtt/releases/latest).
 can2mqtt has no further dependencies. On a Raspberry for example it should be enough to run:
 ```
-wget https://github.com/c3re/can2mqtt/releases/download/v2.0.0/can2mqtt-v2.0.0-linux-arm -O can2mqtt
+wget https://github.com/c3re/can2mqtt/releases/download/v2.2.0/can2mqtt-v2.2.0-linux-arm -O can2mqtt
 chmod +x can2mqtt
 ./can2mqtt
 ```
@@ -19,7 +19,7 @@ The commandline parameters are the following:
  ./can2mqtt -f <can2mqtt.csv> -c <can-interface> -m <mqtt-connectstring> [-v]
  ```
  
-Where can2mqtt.csv is the file for the configuration of can and mqtt pairs, can-interface is a socketcan interface and mqtt-connectstring is string that is accepted by the eclipse paho mqtt client. An additional -v flag can be passed to get verbose debug output. Example:
+Where can2mqtt.csv is the file for the configuration of can and mqtt pairs, can-interface is a socket-can interface and mqtt-connectstring is string that is accepted by the eclipse paho mqtt client. An additional -v flag can be passed to get verbose debug output. Example:
 ```
 ./can2mqtt -f /etc/can2mqtt.csv -c can0 -m tcp://127.0.0.1:1883
 ```
@@ -46,37 +46,48 @@ Explanation for the 1st Line: For example our Doorstatus is published on the CAN
 ## convert-modes
 Here they are:
 
-| convertmode           | description                                                                                                                                                                                                                                                            |
-|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `none`                | does not convert anything. It just takes a bunch of bytes and hands it over to the other side. If you want to send strings, this will be your choice. If you have a mqtt payload that is longer than eight bytes, only the first eight bytes will be send via CAN.     |
-| `bytecolor2colorcode` | Converts an bytearray of 3 bytes to hexadecimal colorcode                                                                                                                                                                                                              |
-| `pixelbin2ascii`      | This mode was designed to adress colorized pixels. MQTT-wise you can insert a string like "<0-255> #RRGGBB" wich will be converted to 4 byte on the CAN-BUS the first byte will be the number of the LED 0-255 and bytes 1, 2, 3 are the color of red, green and blue. |
-| `16bool2ascii`        | Interprets two bytes can-wise and publishes them as 16 boolean values to mqtt                                                                                                                                                                                          |
-| *uint*                |                                                                                                                                                                                                                                                                        |
-| `uint82ascii`         | one uint8 in the CAN-Frame to one uint8 as string in the mqtt payload                                                                                                                                                                                                  |
-| `4uint82ascii`        | four uint8 in the CAN-Frame to four uint8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                           |
-| `8uint82ascii`        | eight uint8 in the CAN-Frame to eight uint8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                         |
-| `uint162ascii`        | one uint16 in the CAN-Frame to one uint16 as string in the mqtt payload                                                                                                                                                                                                |
-| `4uint162ascii`       | four uint16 in the CAN-Frame to four uint16 as string seperated by spaces in the mqtt payload.                                                                                                                                                                         |
-| `uint322ascii`        | one uint32 in the CAN-Frame to one uint32 as string in the mqtt payload                                                                                                                                                                                                |
-| `2uint322ascii`       | two uint32 in the CAN-Frame to two uint32 as string seperated by spaces in the mqtt payload.                                                                                                                                                                           |
-| `uint642ascii`        | one uint64 in the CAN-Frame to one uint64 as string in the mqtt payload                                                                                                                                                                                                |
-| *int*                 |                                                                                                                                                                                                                                                                        |
-| `int82ascii`          | one int8 in the CAN-Frame to one int8 as string in the mqtt payload                                                                                                                                                                                                    |
-| `4int82ascii`         | four int8 in the CAN-Frame to four int8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                             |
-| `8int82ascii`         | eight int8 in the CAN-Frame to eight int8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                           |
-| `int162ascii`         | one int16 in the CAN-Frame to one int16 as string in the mqtt payload                                                                                                                                                                                                  |
-| `4int162ascii`        | four int16 in the CAN-Frame to four int16 as string seperated by spaces in the mqtt payload.                                                                                                                                                                           |
-| `int322ascii`         | one int32 in the CAN-Frame to one int32 as string in the mqtt payload                                                                                                                                                                                                  |
-| `2int322ascii`        | two int32 in the CAN-Frame to two int32 as string seperated by spaces in the mqtt payload.                                                                                                                                                                             |
-| `int642ascii`         | one int64 in the CAN-Frame to one int64 as string in the mqtt payload                                                                                                                                                                                                  |
+| convertmode           | description                                                                                                                                                                                                                                                              |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `none`                | does not convert anything. It just takes a bunch of bytes and hands it over to the other side. If you want to send strings, this will be your choice. If you have a mqtt payload that is longer than eight bytes, only the first eight bytes will be send via CAN.       |
+| `bytecolor2colorcode` | Converts an bytearray of 3 bytes to hexadecimal colorcode                                                                                                                                                                                                                |
+| `pixelbin2ascii`      | This mode was designed to address colorized pixels. MQTT-wise you can insert a string like "<0-255> #RRGGBB" which will be converted to 4 byte on the CAN-BUS the first byte will be the number of the LED 0-255 and bytes 1, 2, 3 are the color of red, green and blue. |
+| `16bool2ascii`        | Interprets two bytes can-wise and publishes them as 16 boolean values to mqtt                                                                                                                                                                                            |
+| *uint*                |                                                                                                                                                                                                                                                                          |
+| `uint82ascii`         | one uint8 in the CAN-Frame to one uint8 as string in the mqtt payload                                                                                                                                                                                                    |
+| `4uint82ascii`        | four uint8 in the CAN-Frame to four uint8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                             |
+| `8uint82ascii`        | eight uint8 in the CAN-Frame to eight uint8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                           |
+| `uint162ascii`        | one uint16 in the CAN-Frame to one uint16 as string in the mqtt payload                                                                                                                                                                                                  |
+| `4uint162ascii`       | four uint16 in the CAN-Frame to four uint16 as string seperated by spaces in the mqtt payload.                                                                                                                                                                           |
+| `uint322ascii`        | one uint32 in the CAN-Frame to one uint32 as string in the mqtt payload                                                                                                                                                                                                  |
+| `2uint322ascii`       | two uint32 in the CAN-Frame to two uint32 as string seperated by spaces in the mqtt payload.                                                                                                                                                                             |
+| `uint642ascii`        | one uint64 in the CAN-Frame to one uint64 as string in the mqtt payload                                                                                                                                                                                                  |
+| *int*                 |                                                                                                                                                                                                                                                                          |
+| `int82ascii`          | one int8 in the CAN-Frame to one int8 as string in the mqtt payload                                                                                                                                                                                                      |
+| `4int82ascii`         | four int8 in the CAN-Frame to four int8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                               |
+| `8int82ascii`         | eight int8 in the CAN-Frame to eight int8 as string seperated by spaces in the mqtt payload.                                                                                                                                                                             |
+| `int162ascii`         | one int16 in the CAN-Frame to one int16 as string in the mqtt payload                                                                                                                                                                                                    |
+| `4int162ascii`        | four int16 in the CAN-Frame to four int16 as string seperated by spaces in the mqtt payload.                                                                                                                                                                             |
+| `int322ascii`         | one int32 in the CAN-Frame to one int32 as string in the mqtt payload                                                                                                                                                                                                    |
+| `2int322ascii`        | two int32 in the CAN-Frame to two int32 as string seperated by spaces in the mqtt payload.                                                                                                                                                                               |
+| `int642ascii`         | one int64 in the CAN-Frame to one int64 as string in the mqtt payload                                                                                                                                                                                                    |
 
 
 ## Unidirectional Mode
 Normally can2mqtt works in bidirectional mode, that means all messages von can are send to mqtt and vice versa. If you wish you can run can2mqtt in a unidirectional mode to only send messages from can to mqtt or only mqtt to can. To do so you have to use the flag `-d` with one fo the following settings:
 
-|dirMode|effect|
-|--|--|
-|0|bidirectional mode, messages will be send from can to mqtt and vice versa |
-|1|unidirectional mode, messages will only be send from CAN-Bus to mqtt broker|
-|2|unidirectional mode, messages will only be send from mqtt broker to the CAN-Bus|
+| dirMode | effect                                                                          |
+|---------|---------------------------------------------------------------------------------|
+| 0       | bidirectional mode, messages will be send from can to mqtt and vice versa       |
+| 1       | unidirectional mode, messages will only be send from CAN-Bus to mqtt broker     |
+| 2       | unidirectional mode, messages will only be send from mqtt broker to the CAN-Bus |
+
+## Add a convert-Mode
+
+If you want to add a convert-Mode think about a name. This is the name that you can later refer to when you want to
+use your convert-Mode in the `can2mqtt.csv` config-file. In this example the name of the new convert-Mode is `"mymode"`.
+Next, add the new convert-Mode in the [switch-case block in `src/main.go`](./src/main.go#L247). In the new case
+statement you refer to two functions. One is called when a MQTT-message is received and the other one when a CAN-frame is
+received. Change the contents of those functions to the behaviour that you seek for. Mockup code for `MyModeToCan` and
+`MyModeToMqtt` can be found in [mymode.go](./src/mymode.go). 
+
+Good luck & happy hacking ✌
