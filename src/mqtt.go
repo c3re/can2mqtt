@@ -3,8 +3,8 @@ package main
 import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"log/slog"
+	"net/url"
 	"os"
-	"strings"
 )
 
 var client MQTT.Client
@@ -12,37 +12,33 @@ var user, pw string
 
 // uses the connectString to establish a connection to the MQTT
 // broker
-func mqttStart(suppliedString string) {
-	connectString := suppliedString
-	if strings.Contains(suppliedString, "@") {
-		// looks like authentication is required for this server
-		userPasswordHost := strings.TrimPrefix(suppliedString, "tcp://")
-		userPassword, host, found := strings.Cut(userPasswordHost, "@")
-		user, pw, found = strings.Cut(userPassword, ":")
-		if !found {
-			slog.Error("mqtt: missing colon(:) between username and password", "connect string", suppliedString)
-			os.Exit(1)
-		}
-		connectString = "tcp://" + host
+func mqttStart(URL string) {
+	// parse the supplied URL
+	u, err := url.Parse(URL)
+	if err != nil {
+		slog.Error("while parsing URL", "url", URL, "error", err)
+		os.Exit(1)
 	}
-	clientSettings := MQTT.NewClientOptions().AddBroker(connectString)
-	clientSettings.SetClientID("CAN2MQTT")
+
+	// create MQTT Client
+	clientSettings := MQTT.NewClientOptions().AddBroker(u.Scheme + "://" + u.Host)
+	clientSettings.SetClientID("can2mqtt")
 	clientSettings.SetDefaultPublishHandler(handleMQTT)
-	if strings.Contains(suppliedString, "@") {
-		clientSettings.SetCredentialsProvider(userPwCredProv)
+	if u.User != nil {
+		clientSettings.SetUsername(u.User.Username())
+		password, passwdSet := u.User.Password()
+		if passwdSet {
+			clientSettings.SetPassword(password)
+		}
 	}
+
 	client = MQTT.NewClient(clientSettings)
-	slog.Debug("mqtt: starting connection", "connectString", connectString)
+	slog.Debug("mqtt: starting connection", "connectString", URL)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		slog.Error("mqtt: could not connect to mqtt", "error", token.Error())
 		os.Exit(1)
 	}
 	slog.Info("mqtt: connected to mqtt")
-}
-
-// credentialsProvider
-func userPwCredProv() (username, password string) {
-	return user, pw
 }
 
 // subscribe to a new topic
