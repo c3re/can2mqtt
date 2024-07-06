@@ -19,7 +19,7 @@ func canStart(canInterface string) {
 	slog.Debug("canbus: initializing CAN-Bus", "interface", canInterface)
 	bus, err = can.NewBusForInterfaceWithName(canInterface)
 	if err != nil {
-		slog.Error("canbus: error while initializing CAN-Bus", "error", err)
+		slog.Error("canbus: error while initializing CAN-Bus", "interface", canInterface, "error", err)
 		os.Exit(1)
 	}
 	slog.Info("canbus: connected to CAN")
