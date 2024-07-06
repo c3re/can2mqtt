@@ -8,7 +8,7 @@ Here you can see can2mqtt in action:
 can2mqtt is written in Go and static linked binaries are available [here](https://github.com/c3re/can2mqtt/releases/latest).
 can2mqtt has no further dependencies. On a Raspberry for example it should be enough to run:
 ```
-wget https://github.com/c3re/can2mqtt/releases/download/v2.2.0/can2mqtt-v2.2.0-linux-arm -O can2mqtt
+wget https://github.com/c3re/can2mqtt/releases/download/v2.2.1/can2mqtt-v2.2.1-linux-arm -O can2mqtt
 chmod +x can2mqtt
 ./can2mqtt
 ```
@@ -73,7 +73,7 @@ Here they are:
 
 
 ## Unidirectional Mode
-Normally can2mqtt works in bidirectional mode, that means all messages von can are send to mqtt and vice versa. If you wish you can run can2mqtt in a unidirectional mode to only send messages from can to mqtt or only mqtt to can. To do so you have to use the flag `-d` with one fo the following settings:
+Normally can2mqtt works in bidirectional mode, that means all messages from the CAN-bus are send to mqtt and vice versa. If you wish you can run can2mqtt in a unidirectional mode to only send messages from can to mqtt or only mqtt to can. To do so you have to use the flag `-d` with one fo the following settings:
 
 | dirMode | effect                                                                          |
 |---------|---------------------------------------------------------------------------------|
