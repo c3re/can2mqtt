@@ -5,8 +5,8 @@ Here you can see can2mqtt in action:
 [![can2mqtt demo](screenshot.png)](https://asciinema.org/a/542608?autoplay=1)
 
 ## Installation
-can2mqtt is written in Go and static linked binaries are available [here](https://github.com/c3re/can2mqtt/releases/latest).
-can2mqtt has no further dependencies. On a Raspberry for example it should be enough to run:
+The latest compiled binary is available in the [releases](https://github.com/c3re/can2mqtt/releases/latest).
+The binaries are statically linked and have no further dependencies. On a Raspberry you can install via:
 ```
 wget https://github.com/c3re/can2mqtt/releases/download/v2.2.1/can2mqtt-v2.2.1-linux-arm -O can2mqtt
 chmod +x can2mqtt
@@ -16,10 +16,18 @@ chmod +x can2mqtt
 ## Usage
 The commandline parameters are the following:
  ```
- ./can2mqtt -f <can2mqtt.csv> -c <can-interface> -m <mqtt-connectstring> [-v]
+ ./can2mqtt -f <can2mqtt.csv>  -m <mqtt-connectstring> [-v] -c <can-interface>
  ```
  
-Where can2mqtt.csv is the file for the configuration of can and mqtt pairs, can-interface is a socket-can interface and mqtt-connectstring is string that is accepted by the eclipse paho mqtt client. An additional -v flag can be passed to get verbose debug output. Example:
+`<can2mqtt.csv>` is the configurations where your can2mqtt pairs are set.
+
+`<mqtt-connectstring>` is a URL that is used to connect to your MQTT-Broker. username and password can be supplied like this: `tcp://user:pass@host:port`.
+
+`<can-interface>` refers to the name of a [socket-can](https://www.kernel.org/doc/html/next/networking/can.html) interface on your computer that you want to bridge with can2mqtt. In case you have no idea what a socket-can interface is or how to configure it, read [how do i get a socket-can interface?](#how-do-i-get-a-socket-can-interface).
+
+An additional `-v` flag can be passed to get verbose debug output.
+
+Here is a full, working example:
 ```
 ./can2mqtt -f /etc/can2mqtt.csv -c can0 -m tcp://127.0.0.1:1883
 ```
@@ -80,7 +88,20 @@ Normally can2mqtt works in bidirectional mode, that means all messages from the 
 | 0       | bidirectional mode, messages will be send from can to mqtt and vice versa       |
 | 1       | unidirectional mode, messages will only be send from CAN-Bus to mqtt broker     |
 | 2       | unidirectional mode, messages will only be send from mqtt broker to the CAN-Bus |
+## How do I get a socket-can interface?
+You can either use a hardware interface or setup a virtual socket-can interface.
+### Hardware interface
+There are many articles on the internet on how to get a can interface in Linux. The important part here is that you get a socket-can interface in the end. But in most cases this is possible. For example the MCP2515 chip can be used with the SPI interface of a raspberry to create a socket-can interface. There is a driver for the ELM327 chip too. Serial-to-CAN converters can be used too via `slcand`.
+### Virtual interface
+For testing purposes or to just get you going you can use `vcan` a virtual can interface that comes with Linux itself. You can configure it for example like this:
+```bash
+sudo ip link add dev vcan0 type vcan
+sudo ip link set vcan0 up
+```
+Now you can use your new interface `vcan0` as socket-can interface with can2mqtt.
 
+## Debugging
+To debug can2mqtts behaviour you need to be able to send and receive CAN frames and MQTT messages. For MQTT I recommend [mosquitto](https://mosquitto.org/) with its `mosquitto_pub` and `mosquitto_sub` commands. For CAN i recommend [can-utils]() with its tools `cansend` and `candump`.
 ## Add a convert-Mode
 
 If you want to add a convert-Mode think about a name. This is the name that you can later refer to when you want to
