@@ -8,7 +8,13 @@ import (
 	"strings"
 )
 
-func SixteenBool2AsciiToCan(input []byte) (can.Frame, error) {
+type SixteenBool2Ascii struct{}
+
+func (_ SixteenBool2Ascii) String() string {
+	return "16bool2ascii"
+}
+
+func (_ SixteenBool2Ascii) ToCan(input []byte) (can.Frame, error) {
 	splitInput := strings.Split(string(input), " ") // TODO use strings.Fields here
 	if len(splitInput) != 16 {
 		return can.Frame{}, errors.New("input does not contain exactly 16 numbers seperated by spaces")
@@ -28,7 +34,7 @@ func SixteenBool2AsciiToCan(input []byte) (can.Frame, error) {
 	}
 	return can.Frame{Length: 2, Data: returnData}, nil
 }
-func SixteenBool2AsciiToMqtt(input can.Frame) ([]byte, error) {
+func (_ SixteenBool2Ascii) ToMqtt(input can.Frame) ([]byte, error) {
 	var returnStrings [16]string
 	for i := 0; i < 16; i++ {
 		if (input.Data[i>>3]>>(i%8))&0x1 == 1 {
