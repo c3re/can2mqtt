@@ -1,4 +1,4 @@
-package convertfunctions
+package convertmode
 
 import "github.com/brutella/can"
 

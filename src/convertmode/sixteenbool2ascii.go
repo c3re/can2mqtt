@@ -1,4 +1,4 @@
-package convertfunctions
+package convertmode
 
 import (
 	"errors"

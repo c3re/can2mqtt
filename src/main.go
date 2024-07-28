@@ -4,7 +4,7 @@ import (
 	"bufio"        // Reader
 	"encoding/csv" // CSV Management
 	"flag"
-	"github.com/c3re/can2mqtt/convertfunctions"
+	"github.com/c3re/can2mqtt/convertmode"
 	"io"  // EOF const
 	"log" // error management
 	"log/slog"
@@ -67,20 +67,20 @@ func readC2MPFromFile(filename string) {
 	convertModeFromString = make(map[string]ConvertMode)
 
 	// initialize all convertModes
-	convertModeFromString["none"] = convertfunctions.None{}
-	convertModeFromString["16bool2ascii"] = convertfunctions.SixteenBool2Ascii{}
-	convertModeFromString["pixelbin2ascii"] = convertfunctions.PixelBin2Ascii{}
-	convertModeFromString["bytecolor2colorcode"] = convertfunctions.ByteColor2ColorCode{}
-	convertModeFromString["mymode"] = convertfunctions.MyMode{}
-	// Dynamically create int and uint convertmodes
+	convertModeFromString["none"] = convertmode.None{}
+	convertModeFromString["16bool2ascii"] = convertmode.SixteenBool2Ascii{}
+	convertModeFromString["pixelbin2ascii"] = convertmode.PixelBin2Ascii{}
+	convertModeFromString["bytecolor2colorcode"] = convertmode.ByteColor2ColorCode{}
+	convertModeFromString["mymode"] = convertmode.MyMode{}
+	// Dynamically create int and uint convertmode
 	for _, bits := range []uint{8, 16, 32, 64} {
 		for _, instances := range []uint{1, 2, 4, 8} {
 			if bits*instances <= 64 {
 				// int
-				cmi, _ := convertfunctions.NewInt2Ascii(instances, bits)
+				cmi, _ := convertmode.NewInt2Ascii(instances, bits)
 				convertModeFromString[cmi.String()] = cmi
 				// uint
-				cmu, _ := convertfunctions.NewUint2Ascii(instances, bits)
+				cmu, _ := convertmode.NewUint2Ascii(instances, bits)
 				convertModeFromString[cmu.String()] = cmu
 			}
 		}
