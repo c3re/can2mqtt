@@ -9,7 +9,13 @@ import (
 	"strings"
 )
 
-func PixelBin2AsciiToCan(input []byte) (can.Frame, error) {
+type PixelBin2Ascii struct{}
+
+func (_ PixelBin2Ascii) String() string {
+	return "pixelbin2ascii"
+}
+
+func (_ PixelBin2Ascii) ToCan(input []byte) (can.Frame, error) {
 	colorBytesAndNumber := strings.Fields(string(input))
 	if len(colorBytesAndNumber) != 2 {
 		return can.Frame{}, errors.New(fmt.Sprintf("input does not contain exactly two fields, one for the number and one for the color, got %d fields instead.", len(colorBytesAndNumber)))
@@ -32,7 +38,7 @@ func PixelBin2AsciiToCan(input []byte) (can.Frame, error) {
 	return returner, nil
 }
 
-func PixelBin2AsciiToMqtt(input can.Frame) ([]byte, error) {
+func (_ PixelBin2Ascii) ToMqtt(input can.Frame) ([]byte, error) {
 	if input.Length != 4 {
 		return []byte{}, errors.New(fmt.Sprintf("Input does not contain exactly 4 bytes, got %d instead", input.Length))
 	}
