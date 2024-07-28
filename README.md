@@ -106,9 +106,8 @@ To debug can2mqtts behaviour you need to be able to send and receive CAN frames 
 
 If you want to add a convert-Mode think about a name. This is the name that you can later refer to when you want to
 use your convert-Mode in the `can2mqtt.csv` config-file. In this example the name of the new convert-Mode is `"mymode"`.
-Next, add the new convert-Mode in the [switch-case block in `src/main.go`](./src/main.go#L247). In the new case
-statement you refer to two functions. One is called when a MQTT-message is received and the other one when a CAN-frame is
-received. Change the contents of those functions to the behaviour that you seek for. Mockup code for `MyModeToCan` and
-`MyModeToMqtt` can be found in [mymode.go](./src/mymode.go). 
+Next, add the new convert-Mode in the [switch-case block in `src/main.go`](./src/main.go#L247). In the new case you select your convertMode, in this case "convertfunctions.MyMode{}". This struct implements two functions. One is called when a MQTT-message is received and the other one when a CAN-frame is
+received. Change the contents of those functions to the behaviour that you seek for. Mockup code for `(_ MyMode) ToCan` and
+`(_ MyMode) ToMqtt` can be found in [mymode.go](./src/mymode.go). 
 
 Good luck & happy hacking ✌
