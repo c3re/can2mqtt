@@ -23,9 +23,10 @@ type ConvertMode interface {
 // the same three fields as the can2mqtt.csv file: CAN-ID,
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
-	canId      uint32
-	convMethod string
-	toCan      convertToCan
-	toMqtt     convertToMqtt
-	mqttTopic  string
+	canId       uint32
+	convMethod  string
+	toCan       convertToCan
+	toMqtt      convertToMqtt
+	convertMode ConvertMode
+	mqttTopic   string
 }
