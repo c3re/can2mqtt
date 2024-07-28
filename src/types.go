@@ -9,7 +9,7 @@ type convertToCan func(input []byte) (can.Frame, error)
 type convertToMqtt func(input can.Frame) ([]byte, error)
 
 // ConvertMode is the interface that defines the two methods necessary
-// to handle MQTT-Messages as well as CAN-Frames. It also includes Stringer
+// to handle MQTT-Messages (ToMqtt) as well as CAN-Frames(ToCan). It also includes fmt.Stringer
 // to make types that implement it print their human-readable convertmode, as it
 // appears in the can2mqtt file.
 type ConvertMode interface {
