@@ -9,99 +9,52 @@ import (
 	"strings"
 )
 
-func Uint82AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(1, 8, input)
+// Uint2Ascii is a convertMode that can take multiple signed integers of one size.
+// instances describe the amount of numbers that should be converted, bits is the size of each number
+// instances * bits must fit into 64 bits.
+type Uint2Ascii struct {
+	instances, bits uint
 }
 
-func Uint82AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(1, 8, input)
+func (u2a Uint2Ascii) String() string {
+	instanceString := ""
+	if u2a.instances > 1 {
+		instanceString = fmt.Sprintf("%d", u2a.instances)
+	}
+	return fmt.Sprintf("%suint%d2ascii", instanceString, u2a.bits)
 }
 
-func Uint162AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(1, 16, input)
+func NewUint2Ascii(instances, bits uint) (Uint2Ascii, error) {
+	if !(bits == 8 || bits == 16 || bits == 32 || bits == 64) {
+		return Uint2Ascii{}, errors.New(fmt.Sprintf("bitsize %d not supported, please choose one of 8, 16. 32 or 64\n", bits))
+	}
+	if bits*instances > 64 {
+		return Uint2Ascii{}, errors.New(fmt.Sprintf("%d instances of %d bit size would not fit into a 8 byte CAN-Frame. %d exceeds 64 bits.\n", instances, bits, instances*bits))
+	}
+	return Uint2Ascii{instances, bits}, nil
 }
 
-func Uint162AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(1, 16, input)
-}
-
-func Uint322AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(1, 32, input)
-}
-
-func Uint322AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(1, 32, input)
-}
-
-func Uint642AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(1, 64, input)
-}
-
-func Uint642AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(1, 64, input)
-}
-
-func TwoUint322AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(2, 32, input)
-}
-
-func TwoUint322AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(2, 32, input)
-}
-
-func EightUint82AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(8, 8, input)
-}
-
-func EightUint82AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(8, 8, input)
-}
-
-func FourUint82AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(4, 8, input)
-}
-
-func FourUint82AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(4, 8, input)
-}
-
-func FourUint162AsciiToCan(input []byte) (can.Frame, error) {
-	return NUintM2AsciiToCan(4, 16, input)
-}
-
-func FourUint162AsciiToMqtt(input can.Frame) ([]byte, error) {
-	return NUintM2AsciiToMqtt(4, 16, input)
-}
-
-// NUintM2AsciiToCan is the generic approach to convert numberAmount occurrences of numbers with numberWidth bits size.
-// Allowed values for numberAmount are 1-8.
-// Allowed values for numberWidth are 8, 16, 32 or 64
-// numberAmount*numberWidth shall not be larger than 64
+// ToCan is the generic approach to convert instances occurrences of numbers with bits bits size.
+// Allowed values for instances are 1-8.
+// Allowed values for bits are 8, 16, 32 or 64
+// instances*bits must not be larger than 64
 // input has to contain the data that shall be converted. The input is split at whitespaces, the amount of fields has
-// to match numberAmount.
-// If the amount of fields matches, each field is converted to an uint of size numberWidth. The results are then added to the CAN-frame.
-func NUintM2AsciiToCan(numberAmount, numberWidth uint, input []byte) (can.Frame, error) {
-	if !(numberWidth == 8 || numberWidth == 16 || numberWidth == 32 || numberWidth == 64) {
-
-		return can.Frame{}, errors.New(fmt.Sprintf("numberWitdh %d uknown please choose one of 8, 16. 32 or 64\n", numberWidth))
-
-	}
-	if numberWidth*numberAmount > 64 {
-		return can.Frame{}, errors.New(fmt.Sprintf("%d number of %d bit width would not fit into a 8 byte CAN-Frame %d exceeds 64 bits.\n", numberAmount, numberWidth, numberAmount*numberWidth))
-	}
+// to match instances.
+// If the amount of fields matches, each field is converted to an uint of size bits. The results are then added to the CAN-frame.
+func (u2a Uint2Ascii) ToCan(input []byte) (can.Frame, error) {
 	splitInput := strings.Fields(string(input))
-	if uint(len(splitInput)) != numberAmount {
-		return can.Frame{}, errors.New(fmt.Sprintf("input does not contain exactly %d numbers seperated by whitespace", numberAmount))
+	if uint(len(splitInput)) != u2a.instances {
+		return can.Frame{}, errors.New(fmt.Sprintf("input does not contain exactly %d numbers seperated by whitespace", u2a.instances))
 	}
 	var ret can.Frame
-	ret.Length = uint8((numberAmount * numberWidth) >> 3)
-	bytePerNumber := numberWidth >> 3
-	for i := uint(0); i < numberAmount; i++ {
-		res, err := strconv.ParseUint(splitInput[i], 10, int(numberWidth))
+	ret.Length = uint8((u2a.instances * u2a.bits) >> 3)
+	bytePerNumber := u2a.bits >> 3
+	for i := uint(0); i < u2a.instances; i++ {
+		res, err := strconv.ParseUint(splitInput[i], 10, int(u2a.bits))
 		if err != nil {
 			return can.Frame{}, errors.New(fmt.Sprintf("Error while converting string %d: %s, %s", i, splitInput[i], err))
 		}
-		switch numberWidth {
+		switch u2a.bits {
 		case 64:
 			binary.LittleEndian.PutUint64(ret.Data[i*bytePerNumber:(i+1)*bytePerNumber], res)
 		case 32:
@@ -115,29 +68,23 @@ func NUintM2AsciiToCan(numberAmount, numberWidth uint, input []byte) (can.Frame,
 	return ret, nil
 }
 
-// NUintM2AsciiToMqtt is the generic approach to convert numberAmount occurrences of numbers with numberWidth bits size.
-// Allowed values for numberAmount are 1-8.
-// Allowed values for numberWidth are 8, 16, 32 or 64
-// numberAmount*numberWidth shall not be larger than 64
+// ToMqtt is the generic approach to convert instances occurrences of numbers with bits bits size.
+// Allowed values for instances are 1-8.
+// Allowed values for bits are 8, 16, 32 or 64
+// instances*bits shall not be larger than 64
 // input has to Contain the Data that shall be converted. The Size of the CAN-Frame has to fit the expected size.
 // If we have for example 1 amount of 32-Bits numbers the CAN-Frame size input.Length has to be 4 (bytes).
-// If the size fits, the Data is split up in numberAmount pieces and are then processed to a string representation
+// If the size fits, the Data is split up in instances pieces and are then processed to a string representation
 // via strconv.FormatUint.
 // The successful return value is a byte-slice that represents the converted strings joined with a space between them.
-func NUintM2AsciiToMqtt(numberAmount, numberWidth uint, input can.Frame) ([]byte, error) {
-	if !(numberWidth == 8 || numberWidth == 16 || numberWidth == 32 || numberWidth == 64) {
-		return []byte{}, errors.New(fmt.Sprintf("numberWitdh %d uknown please choose one of 8, 16. 32 or 64\n", numberWidth))
-	}
-	if numberWidth*numberAmount > 64 {
-		return []byte{}, errors.New(fmt.Sprintf("%d number of %d bit width would not fit into a 8 byte CAN-Frame %d exceeds 64 bits.\n", numberAmount, numberWidth, numberAmount*numberWidth))
-	}
-	if input.Length != uint8((numberWidth*numberAmount)>>3) {
-		return []byte{}, errors.New(fmt.Sprintf("Input is of wrong length: %d, expected %d because of %d numbers of %d-bits.", input.Length, (numberAmount*numberWidth)>>3, numberAmount, numberWidth))
+func (u2a Uint2Ascii) ToMqtt(input can.Frame) ([]byte, error) {
+	if input.Length != uint8((u2a.bits*u2a.instances)>>3) {
+		return []byte{}, errors.New(fmt.Sprintf("Input is of wrong length: %d, expected %d because of %d numbers of %d-bits.", input.Length, (u2a.instances*u2a.bits)>>3, u2a.instances, u2a.bits))
 	}
 	var returnStrings []string
-	bytePerNumber := numberWidth >> 3
-	for i := uint(0); i < numberAmount; i++ {
-		switch numberWidth {
+	bytePerNumber := u2a.bits >> 3
+	for i := uint(0); i < u2a.instances; i++ {
+		switch u2a.bits {
 		case 64:
 			returnStrings = append(returnStrings, strconv.FormatUint(binary.LittleEndian.Uint64(input.Data[i*bytePerNumber:(i+1)*bytePerNumber]), 10))
 		case 32:
