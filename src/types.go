@@ -24,9 +24,6 @@ type ConvertMode interface {
 // conversion method and MQTT-Topic.
 type can2mqtt struct {
 	canId       uint32
-	convMethod  string
-	toCan       convertToCan
-	toMqtt      convertToMqtt
 	convertMode ConvertMode
 	mqttTopic   string
 }
