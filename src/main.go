@@ -67,12 +67,12 @@ func readC2MPFromFile(filename string) {
 	convertModeFromString = make(map[string]ConvertMode)
 
 	// initialize all convertModes
-	convertModeFromString["none"] = convertmode.None{}
-	convertModeFromString["16bool2ascii"] = convertmode.SixteenBool2Ascii{}
-	convertModeFromString["pixelbin2ascii"] = convertmode.PixelBin2Ascii{}
-	convertModeFromString["bytecolor2colorcode"] = convertmode.ByteColor2ColorCode{}
-	convertModeFromString["mymode"] = convertmode.MyMode{}
-	// Dynamically create int and uint convertmode
+	convertModeFromString[convertmode.None{}.String()] = convertmode.None{}
+	convertModeFromString[convertmode.SixteenBool2Ascii{}.String()] = convertmode.SixteenBool2Ascii{}
+	convertModeFromString[convertmode.PixelBin2Ascii{}.String()] = convertmode.PixelBin2Ascii{}
+	convertModeFromString[convertmode.ByteColor2ColorCode{}.String()] = convertmode.ByteColor2ColorCode{}
+	convertModeFromString[convertmode.MyMode{}.String()] = convertmode.MyMode{}
+	// Dynamically create int and uint convertmodes
 	for _, bits := range []uint{8, 16, 32, 64} {
 		for _, instances := range []uint{1, 2, 4, 8} {
 			if bits*instances <= 64 {
