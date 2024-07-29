@@ -109,11 +109,11 @@ func readC2MPFromFile(filename string) {
 		canID := uint32(tmp)
 		convMode := record[1]
 		topic := record[2]
-		if isIDInSlice(canID) {
+		if pairFromID[canID] != nil {
 			slog.Warn("skipping line, duplicate ID", "id", canID, "line", line)
 			continue
 		}
-		if isTopicInSlice(topic) {
+		if pairFromTopic[topic] != nil {
 			slog.Warn("skipping line duplicate topic", "topic", topic, "line", line)
 			continue
 		}
@@ -136,17 +136,4 @@ func readC2MPFromFile(filename string) {
 	for _, c2mp := range pairFromID {
 		slog.Debug("extracted pair", "id", c2mp.canId, "convertmode", c2mp.convertMode, "topic", c2mp.mqttTopic)
 	}
-}
-
-func isIDInSlice(canId uint32) bool {
-	return pairFromID[canId] != nil
-}
-
-func isTopicInSlice(mqttTopic string) bool {
-	return pairFromTopic[mqttTopic] != nil
-}
-
-// get the corresponding topic for an ID
-func getTopicFromId(canId uint32) string {
-	return pairFromID[canId].mqttTopic
 }

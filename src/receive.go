@@ -19,7 +19,7 @@ func handleCAN(cf can.Frame) {
 			slog.Warn("conversion to MQTT message unsuccessful", "convertmode", pairFromID[cf.ID].convertMode, "error", err)
 			return
 		}
-		topic := getTopicFromId(cf.ID)
+		topic := pairFromID[cf.ID].mqttTopic
 		mqttPublish(topic, mqttPayload)
 		// this is the most common log-message, craft with care...
 		slog.Info("CAN -> MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", pairFromID[cf.ID].convertMode, "topic", topic, "message", mqttPayload)
