@@ -1,4 +1,5 @@
 100,none,e2e-test/none
+100,none,duplicateIDtest
 101,16bool2ascii,e2e-test/16bool2ascii
 102,uint82ascii,e2e-test/uint82ascii
 103,uint162ascii,e2e-test/uint162ascii
@@ -12,3 +13,5 @@
 111,bytecolor2colorcode,e2e-test/bytecolor2colorcode
 112,pixelbin2ascii,e2e-test/pixelbin2ascii
 523453525,none,e2e-test/largeidtest
+120,none,duplicatetopictest
+121,none,duplicatetopictest
