@@ -20,7 +20,7 @@ var (
 	debugLog                                 bool
 	canInterface, mqttConnection, configFile string
 	version                                  = "dev"
-	dirMode                                  = 0 // directional modes: 0=bidirectional 1=can2mqtt only 2=mqtt2can only [-d]
+	dirMode                                  = BIDIRECTIONAL // directional modes: 0=bidirectional 1=can2mqtt only 2=mqtt2can only [-d]
 	wg                                       sync.WaitGroup
 )
 
@@ -34,7 +34,7 @@ func main() {
 	flag.IntVar(&dirMode, "d", 0, "direction mode\n0: bidirectional (default)\n1: can2mqtt only\n2: mqtt2can only")
 	flag.Parse()
 
-	if dirMode < 0 || dirMode > 2 {
+	if dirMode < BIDIRECTIONAL || dirMode > MQTT2CAN_ONLY {
 		slog.Error("got invalid value for -d. Valid values are 0 (bidirectional), 1 (can2mqtt only) or 2 (mqtt2can only)", "d", dirMode)
 	}
 

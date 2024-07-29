@@ -24,3 +24,10 @@ type can2mqtt struct {
 	convertMode ConvertMode
 	mqttTopic   string
 }
+
+// Valid values for "dirMode"
+const (
+	BIDIRECTIONAL = iota
+	CAN2MQTT_ONLY
+	MQTT2CAN_ONLY
+)
