@@ -85,13 +85,20 @@ sudo ip link set vcan0 up
 Now you can use your new interface `vcan0` as socket-can interface with can2mqtt.
 
 ## Debugging
-To debug can2mqtts behaviour you need to be able to send and receive CAN frames and MQTT messages. For MQTT I recommend [mosquitto](https://mosquitto.org/) with its `mosquitto_pub` and `mosquitto_sub` commands. For CAN i recommend [can-utils]() with its tools `cansend` and `candump`.
-## Add a convert-Mode
+To debug the behaviour of can2mqtt you need to be able to send and receive CAN frames and MQTT messages. For MQTT I recommend [mosquitto](https://mosquitto.org/) with its `mosquitto_pub` and `mosquitto_sub` commands. For CAN i recommend [can-utils]() with its tools `cansend` and `candump`.
 
+## Add a convert-Mode
 If you want to add a convert-Mode think about a name. This is the name that you can later refer to when you want to
-use your convert-Mode in the `can2mqtt.csv` config-file. In this example the name of the new convert-Mode is `"mymode"`.
-Next, add the new convert-Mode in the [switch-case block in `src/main.go`](./src/main.go#L247). In the new case you select your convertMode, in this case "convertfunctions.MyMode{}". This struct implements two functions. One is called when a MQTT-message is received and the other one when a CAN-frame is
-received. Change the contents of those functions to the behaviour that you seek for. Mockup code for `(_ MyMode) ToCan` and
-`(_ MyMode) ToMqtt` can be found in [mymode.go](./src/mymode.go). 
+use your convert-Mode in the `can2mqtt.csv` config-file. Now, use the file `src/convertmode/mymode.go` as a template for your own convertmode. Copy that file to `src/convertmode/<yournewmode>.go`. Now change all occurrences of "MyMode" with your preferred Name (Lets say `YourNewMode` in this example). Note that it has to start with an upper-case letter, so that it is usable outside of this package. Next you have to write three functions (implement the `ConvertMode` interface):
+1. A conversion method from CAN -> MQTT: `ToMqtt(input can.Frame) ([]byte, error)`
+2. A conversion method from MQTT -> CAN: `ToCan(input []byte) (can.Frame, error)`
+3. A `String() string` method that reports the name of that convertmode. This method is used in some log-messages
+
+Your almost done, the last step is to "register" your new convertmode. To do so add the following line to [`src/main.go#L72`](./src/main.go#L72)
+```go
+convertModeFromString[convertmode.<YourNewMode>{}.String()] = convertmode.<YourNewMode>{}
+```
+
+Now you can use your new convertmode in your `can2mqtt.csv` config File. Use the string that your return in the `String()` function as the name of the convertmode. In the `mymode.go` code this is `"mymode"`.
 
 Good luck & happy hacking ✌
