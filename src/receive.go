@@ -14,15 +14,15 @@ func handleCAN(cf can.Frame) {
 	slog.Debug("received CANFrame", "id", cf.ID, "len", cf.Length, "data", cf.Data)
 	// Only do conversions when necessary
 	if dirMode != 2 {
-		mqttPayload, err := pairFromID[cf.ID].toMqtt(cf)
+		mqttPayload, err := pairFromID[cf.ID].convertMode.ToMqtt(cf)
 		if err != nil {
-			slog.Warn("conversion to MQTT message unsuccessful", "convertmode", pairFromID[cf.ID].convMethod, "error", err)
+			slog.Warn("conversion to MQTT message unsuccessful", "convertmode", pairFromID[cf.ID].convertMode, "error", err)
 			return
 		}
 		topic := getTopicFromId(cf.ID)
 		mqttPublish(topic, mqttPayload)
 		// this is the most common log-message, craft with care...
-		slog.Info("CAN -> MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", pairFromID[cf.ID].convMethod, "topic", topic, "message", mqttPayload)
+		slog.Info("CAN -> MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", pairFromID[cf.ID].convertMode, "topic", topic, "message", mqttPayload)
 	}
 }
 
@@ -34,13 +34,13 @@ func handleMQTT(_ MQTT.Client, msg MQTT.Message) {
 	slog.Debug("received message", "topic", msg.Topic(), "payload", msg.Payload())
 
 	if dirMode != 1 {
-		cf, err := pairFromTopic[msg.Topic()].toCan(msg.Payload())
+		cf, err := pairFromTopic[msg.Topic()].convertMode.ToCan(msg.Payload())
 		if err != nil {
-			slog.Warn("conversion to CAN-Frame unsuccessful", "convertmode", pairFromTopic[msg.Topic()].convMethod, "error", err)
+			slog.Warn("conversion to CAN-Frame unsuccessful", "convertmode", pairFromTopic[msg.Topic()].convertMode, "error", err)
 			return
 		}
 		cf.ID = pairFromTopic[msg.Topic()].canId
 		canPublish(cf)
-		slog.Info("CAN <- MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", pairFromTopic[msg.Topic()].convMethod, "topic", msg.Topic(), "message", msg.Payload())
+		slog.Info("CAN <- MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", pairFromTopic[msg.Topic()].convertMode, "topic", msg.Topic(), "message", msg.Payload())
 	}
 }
