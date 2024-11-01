@@ -24,7 +24,7 @@ func (_ ByteColor2ColorCode) ToCan(input []byte) (can.Frame, error) {
 		return can.Frame{}, errors.New(fmt.Sprintf("Error while converting: %s", err.Error()))
 	}
 	var returner = can.Frame{Length: 3}
-	copy(res, returner.Data[0:3])
+	copy(returner.Data[0:3], res) // copy (dst, src)
 	return returner, nil
 }
 
