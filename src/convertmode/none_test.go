@@ -7,7 +7,7 @@ import (
 
 func TestNoneToCan(t *testing.T) {
 	input := []byte("Gladys")
-	output, err := NoneToCan(input)
+	output, err := None{}.ToCan(input)
 
 	// Check whether err is nil
 	if err != nil {
@@ -27,7 +27,7 @@ func TestNoneToCan(t *testing.T) {
 	}
 
 	// Check if back and forth conversion leads to original input
-	back, err := NoneToMqtt(output)
+	back, err := None{}.ToMqtt(output)
 	if err != nil {
 		t.Fatalf(`NoneToMqtt failed, err not nil: %s`, err.Error())
 	}
@@ -46,7 +46,7 @@ func TestNoneToMqtt(t *testing.T) {
 		Res1:   0,
 		Data:   [8]uint8{'G', 'l', 'a', 'd', 'y', 's'},
 	}
-	output, err := NoneToMqtt(input)
+	output, err := None{}.ToMqtt(input)
 
 	// Check whether err is nil
 	if err != nil {
@@ -66,7 +66,7 @@ func TestNoneToMqtt(t *testing.T) {
 	}
 
 	// Check if back and forth conversion leads to original input
-	back, err := NoneToCan(output)
+	back, err := None{}.ToCan(output)
 	if err != nil {
 		t.Fatalf(`NoneToCan failed, err not nil: %s`, err.Error())
 	}
@@ -78,7 +78,7 @@ func TestNoneToMqtt(t *testing.T) {
 
 func FuzzNoneToCan(f *testing.F) {
 	f.Fuzz(func(t *testing.T, input []byte) {
-		output, err := NoneToCan(input)
+		output, err := None{}.ToCan(input)
 		if err != nil {
 			t.Fatalf("%v: decode: %v", input, err)
 		}
@@ -96,7 +96,7 @@ func FuzzNoneToCan(f *testing.F) {
 				}
 			}
 			// Check if back and forth conversion leads to original input
-			back, err := NoneToMqtt(output)
+			back, err := None{}.ToMqtt(output)
 			if err != nil {
 				t.Fatalf(`NoneToMqtt failed, err not nil: %s`, err.Error())
 			}
@@ -118,7 +118,7 @@ func FuzzNoneToCan(f *testing.F) {
 			}
 
 			// Check if back and forth conversion leads to original input
-			back, err := NoneToMqtt(output)
+			back, err := None{}.ToMqtt(output)
 			if err != nil {
 				t.Fatalf(`NoneToMqtt failed, err not nil: %s`, err.Error())
 			}
@@ -142,7 +142,7 @@ func FuzzNoneToMqtt(f *testing.F) {
 		for i := uint8(0); i < input.Length; i++ {
 			input.Data[i] = inputString[i]
 		}
-		output, err := NoneToMqtt(input)
+		output, err := None{}.ToMqtt(input)
 		if err != nil {
 			t.Fatalf("%v: decode: %v", input, err)
 		}
@@ -160,7 +160,7 @@ func FuzzNoneToMqtt(f *testing.F) {
 				}
 			}
 			// Check if back and forth conversion leads to original input
-			back, err := NoneToCan(output)
+			back, err := None{}.ToCan(output)
 			if err != nil {
 				t.Fatalf(`NoneToMqtt failed, err not nil: %s`, err.Error())
 			}
@@ -184,7 +184,7 @@ func FuzzNoneToMqtt(f *testing.F) {
 			}
 
 			// Check if back and forth conversion leads to original input
-			back, err := NoneToCan(output)
+			back, err := None{}.ToCan(output)
 			if err != nil {
 				t.Fatalf(`NoneToMqtt failed, err not nil: %s`, err.Error())
 			}
