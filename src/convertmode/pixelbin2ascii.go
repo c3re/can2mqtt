@@ -32,9 +32,12 @@ func (_ PixelBin2Ascii) ToCan(input []byte) (can.Frame, error) {
 	if err != nil {
 		return can.Frame{}, errors.New(fmt.Sprintf("Error while converting: %s", err.Error()))
 	}
+	if len(res) != 3 {
+		return can.Frame{}, errors.New(fmt.Sprintf("The color part did not convert to exactly 3 bytes. Got %d instead.", len(res)))
+	}
 	var returner = can.Frame{Length: 4}
 	returner.Data[0] = uint8(number)
-	copy(res, returner.Data[1:4])
+	copy(returner.Data[1:4], res) // copy (dst, src)
 	return returner, nil
 }
 
@@ -42,7 +45,7 @@ func (_ PixelBin2Ascii) ToMqtt(input can.Frame) ([]byte, error) {
 	if input.Length != 4 {
 		return []byte{}, errors.New(fmt.Sprintf("Input does not contain exactly 4 bytes, got %d instead", input.Length))
 	}
-	colorString := "#" + hex.EncodeToString(input.Data[0:3])
+	colorString := "#" + hex.EncodeToString(input.Data[1:4])
 	numberString := strconv.FormatUint(uint64(input.Data[0]), 10)
 	return []byte(strings.Join([]string{numberString, colorString}, " ")), nil
 }
