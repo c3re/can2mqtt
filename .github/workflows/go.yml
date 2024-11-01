@@ -24,6 +24,10 @@ jobs:
       run: go build -v
       working-directory: ./src
 
-    - name: Test
+    - name: Test can2mqtt
       run: go test -v
       working-directory: ./src
+
+    - name: Test convertmodes
+      run: go test -v
+      working-directory: ./src/convertmode
