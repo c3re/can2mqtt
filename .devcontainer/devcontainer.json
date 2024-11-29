@@ -1,0 +1,14 @@
+{
+  "name": "CAN2MQTT",
+  "image": "devcontainer-go-dev:latest",
+  "runArgs": [
+    "--name=CAN2MQTT_Devcontainer"
+  ],
+  "customizations": {
+    // Configure properties specific to VS Code.
+    "vscode": {
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": ["golang.Go"]
+    }
+  }
+}
