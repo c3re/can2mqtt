@@ -1,7 +1,8 @@
 module github.com/c3re/can2mqtt
 
-go 1.22.2
-toolchain go1.24.1
+go 1.23.0
+
+toolchain go1.24.3
 
 require (
 	github.com/brutella/can v0.0.2
