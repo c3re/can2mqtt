@@ -8,7 +8,7 @@ Here you can see can2mqtt in action:
 The latest compiled binary is available in the [releases](https://github.com/c3re/can2mqtt/releases/latest).
 The binaries are statically linked and have no further dependencies. On a Raspberry you can install via:
 ```
-wget https://github.com/c3re/can2mqtt/releases/download/v2.3.0/can2mqtt-v2.3.0-linux-arm -O can2mqtt
+wget https://github.com/c3re/can2mqtt/releases/download/v2.3.2/can2mqtt-v2.3.2-linux-arm -O can2mqtt
 chmod +x can2mqtt
 ./can2mqtt
 ```
