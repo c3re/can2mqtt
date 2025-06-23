@@ -23,6 +23,14 @@ var (
 	wg       sync.WaitGroup
 )
 
+func onConnectionLost(c MQTT.Client, e error) {
+	slog.Debug("MQTT: Connection lost.", e)
+}
+
+func onReconnecting(c MQTT.Client, o *MQTT.ClientOptions) {
+	slog.Debug("MQTT: Reconnecting")
+}
+
 func main() {
 	appConfig := config.GetConfiguration()
 
@@ -50,14 +58,14 @@ func main() {
 	if appConfig.MqttConnection.Protocol != nil {
 		protocol = *appConfig.MqttConnection.Protocol
 	}
-	port := "1883"
+	port := ":1883"
 	if appConfig.MqttConnection.Port != nil {
 		port = fmt.Sprintf(":%d", *appConfig.MqttConnection.Port)
 	}
 
 	// create MQTT Client
-	clientSettings := MQTT.NewClientOptions().AddBroker(protocol + "://" + appConfig.MqttConnection.Url + port)
-	clientSettings.SetClientID("can2mqtt")
+	clientSettings := MQTT.NewClientOptions().AddBroker(protocol + "://" + appConfig.MqttConnection.Url + port).SetResumeSubs(true)
+	clientSettings.SetClientID(appConfig.MqttConnection.ClientName)
 	if appConfig.MqttConnection.Username != nil {
 		clientSettings.SetUsername(*appConfig.MqttConnection.Username)
 	}

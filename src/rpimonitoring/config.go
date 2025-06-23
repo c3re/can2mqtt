@@ -1,7 +1,6 @@
-package config
+package main
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,29 +10,6 @@ import (
 
 	"github.com/jaster-prj/can2mqtt/common"
 )
-
-type RouteDirection int
-
-const (
-	BIDIRECTIONAL RouteDirection = iota
-	MQTT2CAN
-	CAN2MQTT
-)
-
-type Route struct {
-	CanID     string         `json:"canid"`
-	Topic     string         `json:"topic"`
-	Direction RouteDirection `json:"direction"`
-	Converter *string        `json:"converter,omitempty"`
-}
-
-func (r *Route) GetHash() string {
-	json, err := json.Marshal(r)
-	if err != nil {
-		return ""
-	}
-	return fmt.Sprintf("%x\n", sha256.Sum256(json))
-}
 
 type AppConfig struct {
 	LogLevel       *slog.Level `json:"loglevel,omitempty"`

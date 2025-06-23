@@ -125,6 +125,7 @@ func (c *CanListener) Stop() {
 }
 
 func (c *CanListener) UpdateConfiguration(addRoutes []config.Route, delRoutes []config.Route) {
+	slog.Info("CanListener UpdateConfiguration")
 	for _, route := range delRoutes {
 		c.Unsubscribe(route.CanID)
 	}
@@ -209,5 +210,5 @@ func (c *CanListener) handleCAN(cf can.Frame) {
 		Payload: mqttPayload,
 	}
 	// this is the most common log-message, craft with care...
-	slog.Info("CAN -> MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", converter, "topic", topic, "message", mqttPayload)
+	// slog.Debug("CAN -> MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", converter, "topic", topic, "message", mqttPayload)
 }

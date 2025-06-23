@@ -108,6 +108,7 @@ func (m *MqttListener) Stop() {
 }
 
 func (m *MqttListener) UpdateConfiguration(addRoutes []config.Route, delRoutes []config.Route) {
+	slog.Info("MqttListener UpdateConfiguration")
 	for _, route := range delRoutes {
 		m.Unsubscribe(route.Topic)
 	}
@@ -192,6 +193,5 @@ func (m *MqttListener) handleMQTT(_ MQTT.Client, msg MQTT.Message) {
 	}
 	cf.ID = uint32(canID)
 	m.publishCan <- cf
-	slog.Info("CAN <- MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", converter, "topic", msg.Topic(), "message", msg.Payload())
-
+	// slog.Debug("CAN <- MQTT", "ID", cf.ID, "len", cf.Length, "data", cf.Data, "convertmode", converter, "topic", msg.Topic(), "message", msg.Payload())
 }
