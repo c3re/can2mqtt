@@ -1,0 +1,113 @@
+[package]
+name = "can2mqtt-rs-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+regex = "1.11.1"
+
+[dependencies.can2mqtt-rs]
+path = ".."
+
+[[bin]]
+name = "convert_none2can"
+path = "fuzz_targets/convert_none2can.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_none2mqtt"
+path = "fuzz_targets/convert_none2mqtt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_color2mqtt"
+path = "fuzz_targets/convert_color2mqtt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_color2can"
+path = "fuzz_targets/convert_color2can.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_pixel2mqtt"
+path = "fuzz_targets/convert_pixel2mqtt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_pixel2can"
+path = "fuzz_targets/convert_pixel2can.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_sixteenbool2can"
+path = "fuzz_targets/convert_sixteenbool2can.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_sixteenbool2mqtt"
+path = "fuzz_targets/convert_sixteenbool2mqtt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_uint2mqtt"
+path = "fuzz_targets/convert_uint2mqtt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_uint2can"
+path = "fuzz_targets/convert_uint2can.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_int2can"
+path = "fuzz_targets/convert_int2can.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_int2mqtt"
+path = "fuzz_targets/convert_int2mqtt.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_mymode2can"
+path = "fuzz_targets/convert_mymode2can.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "convert_mymode2mqtt"
+path = "fuzz_targets/convert_mymode2mqtt.rs"
+test = false
+doc = false
+bench = false
