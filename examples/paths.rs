@@ -1,4 +1,4 @@
-use std::path::{self, Path};
+use std::path::Path;
 fn main() {
     let paths = ["/example.csv", "example.csv", "./example.csv", "/home/mamu/vcs/git/can2mqtt-rs/example.csv", "test.csv", "../can2mqtt-rs/example.csv", "/etc/can2mqtt/can2mqtt.csv"];
 

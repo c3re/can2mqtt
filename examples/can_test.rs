@@ -19,10 +19,10 @@ async fn main() {
 }
 
 async fn can_mng(mut rx: Receiver<CANMngEvent>, cs: &CanSocket) {
-    let mut config = ToMqttMap::new();
+    let mut _config = ToMqttMap::new();
     while let Some(ev) = rx.recv().await {
         match ev {
-            CANMngEvent::Config(new_config) => config = *new_config,
+            CANMngEvent::Config(new_config) => _config = *new_config,
             CANMngEvent::RX(cf) => println!("Received Frame {:?}", cf),
             CANMngEvent::TX(cf) => {
                 cs.send(&cf).await.unwrap();
@@ -31,7 +31,7 @@ async fn can_mng(mut rx: Receiver<CANMngEvent>, cs: &CanSocket) {
     }
 }
 
-async fn send_config(tx: &Sender<CANMngEvent>) {
+async fn send_config(_tx: &Sender<CANMngEvent>) {
 
 }
 

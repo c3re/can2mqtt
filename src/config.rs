@@ -1,5 +1,4 @@
 use std::{collections::HashMap, error::Error, rc::Rc};
-use can_socket::can_id;
 use can_socket::CanId;
 
 use crate::converter::all;

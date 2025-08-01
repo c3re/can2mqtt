@@ -3,7 +3,7 @@ use inotify::{Inotify, WatchMask};
 use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Publish};
 //use rumqttc::Packet::Publish;
 use std::{
-    path::{self, PathBuf},
+    path,
     time::Duration,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};

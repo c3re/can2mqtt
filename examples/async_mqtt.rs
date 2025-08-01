@@ -1,4 +1,4 @@
-use can_socket::{CanFrame, CanId, tokio::CanSocket};
+use can_socket::{CanFrame, tokio::CanSocket};
 use can2mqtt_rs::{config::ToCanMap, types::MQTTMngEvent};
 use can2mqtt_rs::{config::ToMqttMap, types::CANMngEvent};
 use inotify::{Inotify, WatchMask};
@@ -16,36 +16,40 @@ use tokio;
 #[tokio::main]
 async fn main() {
     // --- MQTT ---
-    // Client
     let mut mqttoptions = MqttOptions::new("can2mqtt", "localhost", 1883);
     mqttoptions.set_keep_alive(Duration::from_secs(5));
     let (client, eventloop) = AsyncClient::new(mqttoptions, 10);
-    // Channel
-    let (tx_mqtt, rx_mqtt) = mpsc::channel::<MQTTMngEvent>(10);
 
     // --- CAN ---
-    // Client
     let cs = CanSocket::bind("vcan0").expect("Can't bind CAN socket");
     let _ = cs.set_receive_own_messages(false);
-    // Channel
-    let (tx_can, rx_can) = mpsc::channel::<CANMngEvent>(10);
+
+    // --- CONFIG ---
+    let path = "example.csv"; // received argument
+    let abs_path = path::absolute(path).unwrap(); // to read the file
+
+    // Channels
+    let (tx_can, rx_can) = mpsc::channel::<CANMngEvent>(2);
+    let (tx_mqtt, rx_mqtt) = mpsc::channel::<MQTTMngEvent>(2);
+    let (tx_inotify, rx_inotify) = mpsc::channel::<()>(1); // unit type signals reload request
+    tx_inotify.send(()).await.unwrap(); // initial config load, perhaps there is a more elegant way to do it
 
     // --- "FUTURES" --- instances of things doing something and communicating via the channels created above
+    // TODO think a little bit about what should be able to run in parallel (perhaps the three "listeners", MQTT-RX, CAN-RX and Config)
     // config
-    let cfg = send_config(&tx_mqtt, &tx_can); // inotify
+    let inotify = inotify_listener(abs_path.clone(), tx_inotify);
+    let cfg = send_config(rx_inotify, abs_path, &tx_mqtt, &tx_can); // parse config
     // mqtt
     let mqtt_mng = mqtt_mng(rx_mqtt, client, &tx_can); // this will be where the mqtt client is
     let mqtt_rx = mqtt_rx(&tx_mqtt, eventloop); // this will be where the eventloop runs
     // can
     let can_mng = can_mng(rx_can, &cs, &tx_mqtt);
     let can_rx = can_rx(&tx_can, &cs);
-    tokio::join!(cfg, mqtt_mng, mqtt_rx, can_mng, can_rx);
+    tokio::join!(cfg, inotify, mqtt_mng, mqtt_rx, can_mng, can_rx);
 }
 
 // CONFIG
-async fn send_config(tx_mqtt: &Sender<MQTTMngEvent>, tx_can: &Sender<CANMngEvent>) {
-    let path = "example.csv"; // received argument
-    let abs_path = path::absolute(path).unwrap(); // to read the file
+async fn inotify_listener(abs_path: PathBuf, tx_inotify: Sender<()>) {
     let watch_path = abs_path.parent().unwrap(); // to watch the dir
     let filename = abs_path.file_name().unwrap().to_owned(); // to filter the watch 
     let inotify = Inotify::init().expect("Error while initializing inotify instance");
@@ -60,10 +64,20 @@ async fn send_config(tx_mqtt: &Sender<MQTTMngEvent>, tx_can: &Sender<CANMngEvent
     let mut stream = inotify.into_event_stream(buffer).unwrap();
     while let Some(e) = stream.next().await {
         if e.unwrap().name.unwrap() == filename {
-            if let Ok(c) = can2mqtt_rs::config::parse(abs_path.to_str().unwrap()) {
-                let _ = tx_mqtt.send(MQTTMngEvent::Config(Box::new(c.to_can))).await;
-                let _ = tx_can.send(CANMngEvent::Config(Box::new(c.to_mqtt))).await;
-            }
+            tx_inotify.send(()).await.unwrap();
+        }
+    }
+}
+async fn send_config(
+    mut rx_inotify: Receiver<()>,
+    abs_path: PathBuf,
+    tx_mqtt: &Sender<MQTTMngEvent>,
+    tx_can: &Sender<CANMngEvent>,
+) {
+    while let Some(_) = rx_inotify.recv().await {
+        if let Ok(c) = can2mqtt_rs::config::parse(abs_path.to_str().unwrap()) {
+            let _ = tx_mqtt.send(MQTTMngEvent::Config(Box::new(c.to_can))).await;
+            let _ = tx_can.send(CANMngEvent::Config(Box::new(c.to_mqtt))).await;
         }
     }
 }
@@ -98,16 +112,20 @@ async fn mqtt_mng(
             }
             MQTTMngEvent::RX(p) => {
                 match config.get(&p.topic) {
-                    Some(to_can_pair) => {
-                        match to_can_pair.convertmode.towards_can(p.payload) {
-                            Ok(cd) => {
-                                tx_can.send(CANMngEvent::TX(CanFrame::new(to_can_pair.id, cd))).await.unwrap();
-                            }
-                            Err(e) => println!("Error while converting to CAN, Topic: {} convermode: {}: {}", p.topic, to_can_pair.convertmode, e).into()
-                            
+                    Some(to_can_pair) => match to_can_pair.convertmode.towards_can(p.payload) {
+                        Ok(cd) => {
+                            tx_can
+                                .send(CANMngEvent::TX(CanFrame::new(to_can_pair.id, cd)))
+                                .await
+                                .unwrap();
                         }
-                    }
-                    None => { /* should now happen, but if nothing needs to be done */}
+                        Err(e) => println!(
+                            "Error while converting to CAN, Topic: {} convermode: {}: {}",
+                            p.topic, to_can_pair.convertmode, e
+                        )
+                        .into(),
+                    },
+                    None => { /* should now happen, but if nothing needs to be done */ }
                 }
             }
             MQTTMngEvent::TX(p) => {

@@ -1,7 +1,5 @@
-use notify::event;
 use rumqttc::Packet::Publish;
-use rumqttc::{AsyncClient, Client, Event, MqttOptions, QoS};
-use std::thread;
+use rumqttc::{AsyncClient, Event, MqttOptions};
 use std::time::Duration;
 use tokio;
 
@@ -22,7 +20,7 @@ async fn main() {
     let mut mqttoptions = MqttOptions::new("can2mqtt", "localhost", 1883);
     mqttoptions.set_keep_alive(Duration::from_secs(5));
 
-    let (client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
+    let (_client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
 
     // Iterate to poll the eventloop for connection progress
     loop {
