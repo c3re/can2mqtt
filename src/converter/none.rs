@@ -1,21 +1,15 @@
 use std::fmt;
 use crate::converter::types::{CANFrame, Converter, MQTTPayload};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct NoneConverter {}
 
-impl NoneConverter {
-    pub fn new() -> NoneConverter {
-        NoneConverter {  }
-    }
-}
-
 impl Converter for NoneConverter {
-    fn towards_mqtt(self: &Self, cf: CANFrame) -> Result<MQTTPayload, String> {
+    fn towards_mqtt(self: &NoneConverter, cf: CANFrame) -> Result<MQTTPayload, String> {
         Ok(MQTTPayload::copy_from_slice(cf.as_slice()))
     }
 
-    fn towards_can(self: &Self, mut msg: MQTTPayload) -> Result<CANFrame, String> {
+    fn towards_can(self: &NoneConverter, mut msg: MQTTPayload) -> Result<CANFrame, String> {
         msg.truncate(8);
         match CANFrame::try_new(msg.as_ref()) {
             Ok(cf) => Ok(cf),
@@ -40,14 +34,14 @@ mod tests {
         let cf = CANFrame::new([5; 3]);
         match cv.towards_mqtt(cf) {
             Ok(msg) => {
-                println!("Successful conversion {:?}", msg);
+                println!("Successful conversion {msg:?}");
                 // Aaaaand backwards
                 match cv.towards_can(msg) {
-                    Ok(cf2) => println!("Successful reverse conversion {:?}", cf2),
-                    Err(e) => println!("Error in reverse conversion {}", e),
+                    Ok(cf2) => println!("Successful reverse conversion {cf2:?}"),
+                    Err(e) => println!("Error in reverse conversion {e}"),
                 }
             }
-            Err(e) => println!("Error in conversion {}", e),
+            Err(e) => println!("Error in conversion {e}"),
         }
     }
 
@@ -57,16 +51,16 @@ mod tests {
         let cf = CANFrame::new([5; 0]);
         match cv.towards_mqtt(cf) {
             Ok(msg) => {
-                println!("Successful conversion {:?}", msg);
+                println!("Successful conversion {msg:?}");
                 // Aaaaand backwards
                 match cv.towards_can(msg) {
                     Ok(cf2) => {
                         assert_eq!(cf2.len(), 0);
                     }
-                    Err(e) => panic!("Error in reverse conversion {}", e),
+                    Err(e) => panic!("Error in reverse conversion {e}"),
                 }
             }
-            Err(e) => println!("Error in conversion {}", e),
+            Err(e) => println!("Error in conversion {e}"),
         }
     }
 
@@ -92,7 +86,7 @@ mod tests {
                 assert_eq!(cf[6], 110);
                 assert_eq!(cf[7], 103);
             }
-            Err(e) => panic!("Error in reverse conversion {}", e),
+            Err(e) => panic!("Error in reverse conversion {e}"),
         }
     }
 }

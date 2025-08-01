@@ -11,8 +11,6 @@ use std::{
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_stream::StreamExt;
 
-use tokio;
-
 #[tokio::main]
 async fn main() {
     // --- MQTT ---
@@ -35,7 +33,7 @@ async fn main() {
 /// * New CAN Frames
 /// * New MQTT Messages
 /// * A change in our config file
-/// 
+///
 /// These events are monitored by the async functions `can_rx`, `mqtt_rx` and ìnotify`
 async fn run(cs: CanSocket, client: AsyncClient, eventloop: EventLoop, abs_path: PathBuf) {
     // Channels
@@ -83,7 +81,7 @@ async fn send_config(
     tx_mqtt: &Sender<MQTTMngEvent>,
     tx_can: &Sender<CANMngEvent>,
 ) {
-    while let Some(_) = rx_inotify.recv().await {
+    while rx_inotify.recv().await.is_some() {
         if let Ok(c) = can2mqtt::config::parse(abs_path.to_str().unwrap()) {
             let _ = tx_mqtt.send(MQTTMngEvent::Config(Box::new(c.to_can))).await;
             let _ = tx_can.send(CANMngEvent::Config(Box::new(c.to_mqtt))).await;
@@ -108,13 +106,13 @@ async fn mqtt_mng(
                 for topic in config.keys() {
                     match client.unsubscribe(topic).await {
                         Ok(_) => (),
-                        Err(e) => println!("Error unsubscribing {}: {}", topic, e),
+                        Err(e) => println!("Error unsubscribing {topic}: {e}"),
                     }
                 }
                 for topic in new_config.keys() {
                     match client.subscribe(topic, rumqttc::QoS::AtLeastOnce).await {
                         Ok(_) => (),
-                        Err(e) => println!("Error subscribing {}: {}", topic, e),
+                        Err(e) => println!("Error subscribing {topic}: {e}"),
                     }
                 }
                 config = *new_config;
@@ -131,8 +129,7 @@ async fn mqtt_mng(
                         Err(e) => println!(
                             "Error while converting to CAN, Topic: {} convermode: {}: {}",
                             p.topic, to_can_pair.convertmode, e
-                        )
-                        .into(),
+                        ),
                     },
                     None => { /* should now happen, but if nothing needs to be done */ }
                 }
@@ -156,11 +153,8 @@ async fn mqtt_mng(
 
 async fn mqtt_rx(tx: &Sender<MQTTMngEvent>, mut eventloop: EventLoop) {
     loop {
-        match eventloop.poll().await {
-            Ok(Event::Incoming(Packet::Publish(p))) => {
-                let _ = tx.send(MQTTMngEvent::RX(p)).await;
-            }
-            _ => {}
+        if let Ok(Event::Incoming(Packet::Publish(p))) = eventloop.poll().await {
+            let _ = tx.send(MQTTMngEvent::RX(p)).await;
         }
     }
 }

@@ -15,3 +15,4 @@ inotify = "0.11.0"
 notify = "8.1.0"
 tokio = {version="1.47.0", features =["rt-multi-thread"]}
 tokio-stream = "0.1.17"
+ctflag = "0.1.2"

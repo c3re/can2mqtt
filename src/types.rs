@@ -8,7 +8,6 @@ use rumqttc::Publish;
 /// 1. Pairlist (a list of pairs to subscribe and their convertmodes)   
 /// 2. Message In (a Message that has been received that needs to be processed now)                                                               
 /// 3. Message Out (a Message that shall be send (on behalf of the CAN Manager))                                                                  
-/// (4.) Exit, disconnect and shutdown                                                                                                            
 #[derive(Debug)]
 pub enum MQTTMngEvent {                                                                                                                           
     Config(Box<ToCanMap>), // new config to be used                                                                                       

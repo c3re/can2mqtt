@@ -3,17 +3,11 @@ use std::fmt;
 use crate::converter::types::{CANFrame, Converter, MQTTPayload};
 use hex;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ByteColor2ColorCodeConverter {}
 
-impl ByteColor2ColorCodeConverter {
-    pub fn new() -> ByteColor2ColorCodeConverter {
-        ByteColor2ColorCodeConverter {}
-    }
-}
-
 impl Converter for ByteColor2ColorCodeConverter {
-    fn towards_mqtt(self: &Self, cf: CANFrame) -> Result<MQTTPayload, String> {
+    fn towards_mqtt(self: &ByteColor2ColorCodeConverter, cf: CANFrame) -> Result<MQTTPayload, String> {
         if cf.len() != 3 {
             return Err(format!(
                 "Input does not contain exactly 3 bytes, got {} instead",
@@ -26,11 +20,11 @@ impl Converter for ByteColor2ColorCodeConverter {
         )))
     }
 
-    fn towards_can(self: &Self, msg: MQTTPayload) -> Result<CANFrame, String> {
+    fn towards_can(self: &ByteColor2ColorCodeConverter, msg: MQTTPayload) -> Result<CANFrame, String> {
         if !msg.is_ascii() {
             return Err(("input contains non-ASCII characters").to_string());
         }
-        let str = String::from(msg.escape_ascii().to_string());
+        let str = msg.escape_ascii().to_string();
         let str = str.strip_prefix("#").unwrap_or(&str);
         if str.len() != 6 {
             return Err(format!(
@@ -43,7 +37,7 @@ impl Converter for ByteColor2ColorCodeConverter {
                 assert_eq!(v.len(), 3);
                 Ok(CANFrame::new([v[0], v[1], v[2]]))
             }
-            Err(e) => Err(format!("Error while converting: {}", e.to_string())),
+            Err(e) => Err(format!("Error while converting: {e}")),
         }
     }
 }

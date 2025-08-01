@@ -1,18 +1,12 @@
-use std::fmt;
 use crate::converter::types::{CANFrame, Converter, MQTTPayload};
 use bitvec::{prelude::*, view::BitView};
+use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SixteenBool2Ascii {}
 
-impl SixteenBool2Ascii {
-        pub fn new() -> SixteenBool2Ascii {
-            SixteenBool2Ascii {  }
-        }
-}
-
 impl Converter for SixteenBool2Ascii {
-    fn towards_mqtt(self: &Self, cf: CANFrame) -> Result<MQTTPayload, String> {
+    fn towards_mqtt(self: &SixteenBool2Ascii, cf: CANFrame) -> Result<MQTTPayload, String> {
         if cf.len() != 2 {
             return Err(format!(
                 "Input does not contain exactly 2 bytes, got {} instead",
@@ -30,7 +24,7 @@ impl Converter for SixteenBool2Ascii {
         Ok(MQTTPayload::from(res))
     }
 
-    fn towards_can(self: &Self, msg: MQTTPayload) -> Result<CANFrame, String> {
+    fn towards_can(self: &SixteenBool2Ascii, msg: MQTTPayload) -> Result<CANFrame, String> {
         if !msg.is_ascii() {
             return Err(("input contains non-ASCII characters").to_string());
         }
@@ -43,24 +37,24 @@ impl Converter for SixteenBool2Ascii {
             .to_string());
         }
 
-        let str = String::from(msg.escape_ascii().to_string());
+        let str = msg.escape_ascii().to_string();
 
-        let _ = str.split(" ").all(|s| s == "1" || s == "0")
-            || return Err("message contains illegal characters".to_string());
+        if !str.split(" ").all(|s| s == "1" || s == "0") {
+            return Err("message contains illegal characters".to_string());
+        }
 
-        // I used split_whitespace here before, fuzzing found a case that you can 
-        // add enough whitespace to satisfy the 31 byte length requirement stated 
+        // I used split_whitespace here before, fuzzing found a case that you can
+        // add enough whitespace to satisfy the 31 byte length requirement stated
         // above and then end up with an out of bounds error below
         let bits = str
             .split(" ")
-            .map(|s| if s == "1" { true } else { false })
+            .map(|s| s == "1")
             .collect::<BitVec<u8, Msb0>>();
 
         let b0 = bits[0..8].load::<u8>();
         let b1 = bits[8..16].load::<u8>();
         Ok(CANFrame::new([b0, b1]))
     }
-
 }
 
 impl fmt::Display for SixteenBool2Ascii {
@@ -75,12 +69,12 @@ mod tests {
 
     #[test]
     fn test_name() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         assert_eq!("sixteenbool2ascii", cv.to_string());
     }
     #[test]
     fn towards_can_test() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         let msg = MQTTPayload::from("0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 1");
         match cv.towards_can(msg) {
             Ok(cf) => {
@@ -93,33 +87,31 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn towards_can_test2() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         let msg = MQTTPayload::from("0 0 0 1 0 0 0 0 0 0 0 0 1 0 1");
         cv.towards_can(msg).expect_err("should err, only 15 bits");
     }
-    
+
     #[test]
     fn towards_can_test3() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         let msg = MQTTPayload::from("1 0 0 0 1 0 a 0 0 0 0 0 0 1 0 1");
         cv.towards_can(msg).expect_err("should err, illegal char");
     }
-    
+
     #[test]
     fn towards_can_test4() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         let msg = MQTTPayload::from("110 0 0 1 0 1 0 0 0 0 0 0 1 0 1");
         cv.towards_can(msg).expect_err("should err, illegal str");
     }
 
-
-
     #[test]
     fn towards_mqtt_test() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         let cf = CANFrame::new([0, 255]);
         match cv.towards_mqtt(cf) {
             Ok(msg) => {
@@ -130,19 +122,18 @@ mod tests {
             }
         }
     }
-    
+
     #[test]
     fn towards_mqtt_test2() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         let cf = CANFrame::new([0, 255, 1]);
         cv.towards_mqtt(cf).expect_err("should err, wrong length");
     }
-    
+
     #[test]
     fn towards_mqtt_test3() {
-        let cv = SixteenBool2Ascii{};
+        let cv = SixteenBool2Ascii {};
         let cf = CANFrame::new([0]);
         cv.towards_mqtt(cf).expect_err("should err, wrong length");
     }
-
 }

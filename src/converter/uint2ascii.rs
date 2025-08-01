@@ -16,8 +16,7 @@ impl UintConverter {
             1 | 2 | 4 | 8 => {}
             _ => {
                 return Err(format!(
-                    "Invalid instance size, allowed values: 1, 2, 4, 8. got {}",
-                    instances
+                    "Invalid instance size, allowed values: 1, 2, 4, 8. got {instances}"
                 ));
             }
         }
@@ -25,29 +24,27 @@ impl UintConverter {
             8 | 16 | 32 | 64 => {}
             _ => {
                 return Err(format!(
-                    "Invalid bit size, allowed values: 8, 16, 32, 64. got {}",
-                    bits
+                    "Invalid bit size, allowed values: 8, 16, 32, 64. got {bits}"
                 ));
             }
         }
 
         if (bits / 8) * instances > 8 {
             return Err(format!(
-                "{} instances of {} exceed a CAN-Frame (8 byte)",
-                instances, bits
+                "{instances} instances of {bits} exceed a CAN-Frame (8 byte)"
             ));
         }
 
         Ok(UintConverter { instances, bits })
     }
 
-    fn expected_len(self: &Self) -> usize {
+    fn expected_len(&self) -> usize {
         (self.bits / 8) * self.instances
     }
 }
 
 impl Converter for UintConverter {
-    fn towards_mqtt(self: &Self, cf: CANFrame) -> Result<MQTTPayload, String> {
+    fn towards_mqtt(self: &UintConverter, cf: CANFrame) -> Result<MQTTPayload, String> {
         if cf.len() != self.expected_len() {
             return Err(format!(
                 "Length mismatch, expected {} bytes, got {} bytes",
@@ -102,12 +99,12 @@ impl Converter for UintConverter {
         Ok(MQTTPayload::from(res))
     }
 
-    fn towards_can(self: &Self, msg: MQTTPayload) -> Result<CANFrame, String> {
+    fn towards_can(self: &UintConverter, msg: MQTTPayload) -> Result<CANFrame, String> {
         if !msg.is_ascii() {
             return Err(("input contains non-ASCII characters").to_string());
         }
 
-        let str = String::from(msg.escape_ascii().to_string());
+        let str = msg.escape_ascii().to_string();
 
         let number_strs = str.split(" ").collect::<Vec<_>>();
 
@@ -125,7 +122,7 @@ impl Converter for UintConverter {
                 for str in number_strs {
                     match str.parse::<u8>() {
                         Ok(i) => numbers.put_u8(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -133,7 +130,7 @@ impl Converter for UintConverter {
                 for str in number_strs {
                     match str.parse::<u16>() {
                         Ok(i) => numbers.put_u16_le(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -141,7 +138,7 @@ impl Converter for UintConverter {
                 for str in number_strs {
                     match str.parse::<u32>() {
                         Ok(i) => numbers.put_u32_le(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -149,7 +146,7 @@ impl Converter for UintConverter {
                 for str in number_strs {
                     match str.parse::<u64>() {
                         Ok(i) => numbers.put_u64_le(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -165,7 +162,7 @@ impl fmt::Display for UintConverter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let instance_string = match self.instances {
             1 => "".to_string(),
-            i => format!("{}", i),
+            i => format!("{i}"),
         };
         write!(f, "{}uint{}2ascii", instance_string, self.bits)
     }

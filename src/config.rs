@@ -58,12 +58,12 @@ pub fn parse(configfile: &str) -> Result<ConversionConfig, Box<dyn Error>> {
         let cv = convertmodes[&record.convertmode].clone();
 
         let to_mqtt_pair = ToMqttPair{topic: record.topic.clone(), convertmode: cv.clone()};
-        if let Some(_) = to_mqtt.insert(canid, to_mqtt_pair) {
+        if to_mqtt.insert(canid, to_mqtt_pair).is_some() {
             return Err(format!("Line {}: CAN ID already exists: {}", line, record.id).into());
         }
 
         let to_can_pair = ToCanPair{id: canid, convertmode: cv};
-        if let Some(_) = to_can.insert(record.topic.clone(), to_can_pair) {
+        if to_can.insert(record.topic.clone(), to_can_pair).is_some() {
             return Err(format!("Line {}: Topic already exists: {}", line, record.topic).into());
         }
     }

@@ -2,17 +2,12 @@ use crate::converter::types::{CANFrame, Converter, MQTTPayload};
 use hex;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PixelBin2Ascii {}
 
-impl PixelBin2Ascii {
-    pub fn new() -> PixelBin2Ascii {
-        PixelBin2Ascii {}
-    }
-}
 
 impl Converter for PixelBin2Ascii {
-    fn towards_mqtt(self: &Self, cf: CANFrame) -> Result<MQTTPayload, String> {
+    fn towards_mqtt(self: &PixelBin2Ascii, cf: CANFrame) -> Result<MQTTPayload, String> {
         if cf.len() != 4 {
             return Err(format!(
                 "Input does not contain exactly 4 bytes, got {} instead",
@@ -25,14 +20,14 @@ impl Converter for PixelBin2Ascii {
         )))
     }
 
-    fn towards_can(self: &Self, msg: MQTTPayload) -> Result<CANFrame, String> {
+    fn towards_can(self: &PixelBin2Ascii, msg: MQTTPayload) -> Result<CANFrame, String> {
         // filter out total mismatches
         if !msg.is_ascii() {
             return Err(("input contains non-ASCII characters").to_string());
         }
 
         // Split and match
-        let str = String::from(msg.escape_ascii().to_string());
+        let str = msg.escape_ascii().to_string();
         let fields: Vec<&str> = str.split(' ').collect();
         if fields.len() != 2 {
             return Err("input split at whitespace does not contain two fields".to_string());
@@ -48,7 +43,7 @@ impl Converter for PixelBin2Ascii {
         }
 
         // deal with second part (color)
-        let str = fields[1].strip_prefix("#").unwrap_or(&fields[1]);
+        let str = fields[1].strip_prefix("#").unwrap_or(fields[1]);
         if str.len() != 6 {
             return Err(format!(
                 "color input does not contain exactly 6 nibbles each represented by one character, got {} instead",
@@ -62,9 +57,9 @@ impl Converter for PixelBin2Ascii {
                 cf[2] = v[1];
                 cf[3] = v[2];
             }
-            Err(e) => return Err(format!("Error while converting: {}", e.to_string())),
+            Err(e) => return Err(format!("Error while converting: {e}")),
         }
-        return Ok(cf);
+        Ok(cf)
     }
 }
 

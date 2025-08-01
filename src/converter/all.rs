@@ -20,11 +20,11 @@ use std::rc::Rc;
 pub fn get_convertmodes() -> HashMap<String, Rc<dyn Converter>> {
     // create a HashMap with all convertmodes:
     let mut convertmodes: HashMap<String, Rc<dyn Converter>> = HashMap::new();
-    let nonecv = Rc::new(NoneConverter::new());
-    let bytecolorcv = Rc::new(ByteColor2ColorCodeConverter::new());
-    let mymodecv = Rc::new(MyModeConverter::new());
-    let pixelcv = Rc::new(PixelBin2Ascii::new());
-    let sixteenboolcv = Rc::new(SixteenBool2Ascii::new());
+    let nonecv = Rc::new(NoneConverter::default());
+    let bytecolorcv = Rc::new(ByteColor2ColorCodeConverter::default());
+    let mymodecv = Rc::new(MyModeConverter::default());
+    let pixelcv = Rc::new(PixelBin2Ascii::default());
+    let sixteenboolcv = Rc::new(SixteenBool2Ascii::default());
 
     convertmodes.insert(nonecv.to_string(), nonecv);
     convertmodes.insert(bytecolorcv.to_string(), bytecolorcv);

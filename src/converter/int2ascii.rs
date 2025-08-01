@@ -1,7 +1,6 @@
-use std::fmt;
 use crate::converter::types::{CANFrame, Converter, MQTTPayload};
 use bytes::BufMut;
-
+use std::fmt;
 
 #[derive(Debug)]
 pub struct IntConverter {
@@ -15,8 +14,7 @@ impl IntConverter {
             1 | 2 | 4 | 8 => {}
             _ => {
                 return Err(format!(
-                    "Invalid instance size, allowed values: 1, 2, 4, 8. got {}",
-                    instances
+                    "Invalid instance size, allowed values: 1, 2, 4, 8. got {instances}"
                 ));
             }
         }
@@ -24,29 +22,27 @@ impl IntConverter {
             8 | 16 | 32 | 64 => {}
             _ => {
                 return Err(format!(
-                    "Invalid bit size, allowed values: 8, 16, 32, 64. got {}",
-                    bits
+                    "Invalid bit size, allowed values: 8, 16, 32, 64. got {bits}"
                 ));
             }
         }
 
         if (bits / 8) * instances > 8 {
             return Err(format!(
-                "{} instances of {} exceed a CAN-Frame (8 byte)",
-                instances, bits
+                "{instances} instances of {bits} exceed a CAN-Frame (8 byte)"
             ));
         }
 
         Ok(IntConverter { instances, bits })
     }
 
-    fn expected_len(self: &Self) -> usize {
+    fn expected_len(self: &IntConverter) -> usize {
         (self.bits / 8) * self.instances
     }
 }
 
 impl Converter for IntConverter {
-    fn towards_mqtt(self: &Self, cf: CANFrame) -> Result<MQTTPayload, String> {
+    fn towards_mqtt(self: &IntConverter, cf: CANFrame) -> Result<MQTTPayload, String> {
         if cf.len() != self.expected_len() {
             return Err(format!(
                 "Length mismatch, expected {} bytes, got {} bytes",
@@ -101,12 +97,12 @@ impl Converter for IntConverter {
         Ok(MQTTPayload::from(res))
     }
 
-    fn towards_can(self: &Self, msg: MQTTPayload) -> Result<CANFrame, String> {
+    fn towards_can(self: &IntConverter, msg: MQTTPayload) -> Result<CANFrame, String> {
         if !msg.is_ascii() {
             return Err(("input contains non-ASCII characters").to_string());
         }
 
-        let str = String::from(msg.escape_ascii().to_string());
+        let str = msg.escape_ascii().to_string();
 
         let number_strs = str.split(" ").collect::<Vec<_>>();
 
@@ -124,7 +120,7 @@ impl Converter for IntConverter {
                 for str in number_strs {
                     match str.parse::<i8>() {
                         Ok(i) => numbers.put_i8(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -132,7 +128,7 @@ impl Converter for IntConverter {
                 for str in number_strs {
                     match str.parse::<i16>() {
                         Ok(i) => numbers.put_i16_le(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -140,7 +136,7 @@ impl Converter for IntConverter {
                 for str in number_strs {
                     match str.parse::<i32>() {
                         Ok(i) => numbers.put_i32_le(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -148,7 +144,7 @@ impl Converter for IntConverter {
                 for str in number_strs {
                     match str.parse::<i64>() {
                         Ok(i) => numbers.put_i64_le(i),
-                        Err(e) => return Err(format!("Error parsing number: {}", e.to_string())),
+                        Err(e) => return Err(format!("Error parsing number: {e}")),
                     }
                 }
             }
@@ -158,19 +154,17 @@ impl Converter for IntConverter {
             Err(e) => Err(e.to_string()),
         }
     }
-
 }
 
 impl fmt::Display for IntConverter {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let instance_string = match self.instances {
             1 => "".to_string(),
-            i => format!("{}", i),
+            i => format!("{i}"),
         };
-        write!(f, "{}int{}2ascii", instance_string, self.bits )
+        write!(f, "{}int{}2ascii", instance_string, self.bits)
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -208,7 +202,10 @@ mod tests {
         // implicit "1"
         assert_eq!(IntConverter::new(1, 8).unwrap().to_string(), "int82ascii");
         assert_eq!(IntConverter::new(2, 8).unwrap().to_string(), "2int82ascii");
-        assert_eq!(IntConverter::new(2, 32).unwrap().to_string(), "2int322ascii");
+        assert_eq!(
+            IntConverter::new(2, 32).unwrap().to_string(),
+            "2int322ascii"
+        );
     }
 
     #[test]
@@ -287,7 +284,6 @@ mod tests {
             .expect_err("should err, -129 too large for a i8");
     }
 
-
     #[test]
     fn test_towards_can88e3() {
         let cv = IntConverter::new(8, 8).unwrap();
@@ -312,10 +308,9 @@ mod tests {
             .expect_err("should err, non-numbers involved");
     }
 
-
     #[test]
     fn test_towards_can416() {
-        let cv = IntConverter::new(4,16).unwrap();
+        let cv = IntConverter::new(4, 16).unwrap();
         let msg = MQTTPayload::copy_from_slice("1 2 3 4".as_bytes());
         let cf = cv.towards_can(msg).unwrap();
         assert_eq!(cf, [1, 0, 2, 0, 3, 0, 4, 0]);
@@ -323,10 +318,9 @@ mod tests {
 
     #[test]
     fn test_towards_can216() {
-        let cv = IntConverter::new(2,16).unwrap();
+        let cv = IntConverter::new(2, 16).unwrap();
         let msg = MQTTPayload::copy_from_slice("1 2".as_bytes());
         let cf = cv.towards_can(msg).unwrap();
         assert_eq!(cf, [1, 0, 2, 0]);
     }
-
 }
