@@ -1,10 +1,10 @@
 [package]
-name = "can2mqtt-rs"
+name = "can2mqtt"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-can-socket = { version="0.3.3", features = ["tokio"], path = "../can-socket-rs/can-socket"}
+can-socket = { version="0.3.4", features = ["tokio"]}
 rumqttc = "0.24.0"
 bytes = "1.10.1"
 hex = "0.4.3"
