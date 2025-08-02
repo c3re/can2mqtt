@@ -1,7 +1,10 @@
 use can_socket::{CanFrame, tokio::CanSocket};
+use can2mqtt::types::C2MFlags;
 use can2mqtt::{config::ToCanMap, types::MQTTMngEvent};
 use can2mqtt::{config::ToMqttMap, types::CANMngEvent};
+use ctflag::Flags;
 use inotify::{Inotify, WatchMask};
+use log::*;
 use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Publish};
 //use rumqttc::Packet::Publish;
 use std::{
@@ -11,8 +14,13 @@ use std::{
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_stream::StreamExt;
 
+
 #[tokio::main]
 async fn main() {
+    let flags = get_flags();
+    start_logging(&flags);
+    info!("Starting can2mqtt version=3.0.0 {:?}", flags);
+
     // --- MQTT ---
     let mut mqttoptions = MqttOptions::new("can2mqtt", "localhost", 1883);
     mqttoptions.set_keep_alive(Duration::from_secs(5));
@@ -102,17 +110,17 @@ async fn mqtt_mng(
     while let Some(ev) = rx_mqtt.recv().await {
         match ev {
             MQTTMngEvent::Config(new_config) => {
-                println!("New config!");
+                info!("New config!");
                 for topic in config.keys() {
                     match client.unsubscribe(topic).await {
                         Ok(_) => (),
-                        Err(e) => println!("Error unsubscribing {topic}: {e}"),
+                        Err(e) => error!("Error unsubscribing {topic}: {e}"),
                     }
                 }
                 for topic in new_config.keys() {
                     match client.subscribe(topic, rumqttc::QoS::AtLeastOnce).await {
                         Ok(_) => (),
-                        Err(e) => println!("Error subscribing {topic}: {e}"),
+                        Err(e) => error!("Error subscribing {topic}: {e}"),
                     }
                 }
                 config = *new_config;
@@ -126,7 +134,7 @@ async fn mqtt_mng(
                                 .await
                                 .unwrap();
                         }
-                        Err(e) => println!(
+                        Err(e) => warn!(
                             "Error while converting to CAN, Topic: {} convermode: {}: {}",
                             p.topic, to_can_pair.convertmode, e
                         ),
@@ -178,7 +186,7 @@ async fn can_mng(mut rx: Receiver<CANMngEvent>, cs: &CanSocket, tx_mqtt: &Sender
                                     )))
                                     .await;
                             }
-                            Err(e) => println!(
+                            Err(e) => warn!(
                                 "Error converting {:?} to mqtt, convertmode was {}: {}",
                                 cf.data().unwrap(),
                                 to_mqtt_pair.convertmode,
@@ -201,4 +209,26 @@ async fn can_rx(tx: &Sender<CANMngEvent>, cs: &CanSocket) {
         let cf = cs.recv().await.unwrap();
         tx.send(CANMngEvent::RX(cf)).await.unwrap();
     }
+}
+
+fn get_flags() -> C2MFlags {
+    match C2MFlags::from_args(std::env::args()) {
+        Ok((config, _)) => config,
+        Err(_) => {
+            println!("{}", C2MFlags::description());
+            std::process::exit(1);
+        }
+    }
+}
+
+fn start_logging(flags: &C2MFlags) {
+    let loglevel = match flags.verbose_output {
+        true => Level::Debug,
+        false => Level::Info,
+    };
+    stderrlog::new()
+        .verbosity(loglevel)
+        .module(module_path!())
+        .init()
+        .unwrap();
 }
