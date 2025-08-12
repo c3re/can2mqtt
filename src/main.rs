@@ -1,3 +1,9 @@
+// TODO the whole thingy has a high CPU usage (compared to the go version of can2mqtt)
+// TODO the go version detects if the can interface is down (this only checks whether interface is available)
+// TODO make log messages similar to the one of the go version
+// TODO the go version detects if the mqtt server is down / unreachable
+// TODO the go version detects whether the config exists...
+// man lots of stuff todo...
 use can_socket::{CanFrame, tokio::CanSocket};
 use can2mqtt::types::C2MFlags;
 use can2mqtt::{config::ToCanMap, types::MQTTMngEvent};
@@ -6,29 +12,45 @@ use ctflag::Flags;
 use inotify::{Inotify, WatchMask};
 use log::*;
 use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Publish};
-//use rumqttc::Packet::Publish;
+use url::Url;
 use std::{
     path::{self, PathBuf},
-    time::Duration,
 };
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_stream::StreamExt;
 
-
 #[tokio::main]
 async fn main() {
+    console_subscriber::init();
+    let cs: CanSocket;
+    let client: AsyncClient;
+    let eventloop: EventLoop;
     let flags = get_flags();
     start_logging(&flags);
-    info!("Starting can2mqtt version=3.0.0 {:?}", flags);
+
+    info!("Starting can2mqtt version=3.0.0");
+    debug!("Config: {flags:?}");
 
     // --- MQTT ---
-    let mut mqttoptions = MqttOptions::new("can2mqtt", "localhost", 1883);
-    mqttoptions.set_keep_alive(Duration::from_secs(5));
-    let (client, eventloop) = AsyncClient::new(mqttoptions, 10);
+    match get_mqtt_connection(flags.mqtt_connection.clone()) {
+        Err(e) => {
+            error!("Error initializing MQTT-Connection: {e}");
+            std::process::exit(1);
+        }
+        Ok((cl, el)) => {
+            client = cl;
+            eventloop = el;
+        }
+    }
 
     // --- CAN ---
-    let cs = CanSocket::bind("vcan0").expect("Can't bind CAN socket");
-    let _ = cs.set_receive_own_messages(false);
+    match get_can_socket(flags.can_interface.clone()) {
+        Err(e) => {
+            error!("Error initializing CAN-Interface: {e}");
+            std::process::exit(1);
+        }
+        Ok(c) => cs = c,
+    }
 
     // --- CONFIG ---
     let path = "example.csv"; // received argument
@@ -139,7 +161,7 @@ async fn mqtt_mng(
                             p.topic, to_can_pair.convertmode, e
                         ),
                     },
-                    None => { /* should now happen, but if nothing needs to be done */ }
+                    None => { /* should not happen, but if it does nothing needs to be done */ }
                 }
             }
             MQTTMngEvent::TX(p) => {
@@ -231,4 +253,46 @@ fn start_logging(flags: &C2MFlags) {
         .module(module_path!())
         .init()
         .unwrap();
+}
+
+fn get_can_socket(interface: String) -> Result<CanSocket, String> {
+    match CanSocket::bind(interface) {
+        Err(e) => Err(e.to_string()),
+        Ok(cs) => match cs.set_receive_own_messages(false) {
+            Err(e) => Err(e.to_string()),
+            Ok(_) => Ok(cs),
+        },
+    }
+}
+fn get_mqtt_connection(settings: String) -> Result<(AsyncClient, EventLoop), String> {
+    let url = match Url::parse(&settings) {
+        Err(e) => return Err(e.to_string()),
+        Ok(u) => {
+            // TODO support TLS in the future too
+            if u.scheme() != "tcp" && u.scheme() != "" {
+                return Err(format!("invalid scheme: {}", u.scheme()));
+            }
+            if u.path() != "" {
+                return Err("invalid path: {u.path}".to_string());
+            }
+            if u.cannot_be_a_base() {
+                return Err("URL can not be cannot-be-a-base, enjoy the double negation...".to_string());
+            }
+            if u.fragment().is_some() {
+                return Err("URL fragment has to be empty".to_string());
+            }
+            if u.query().is_some() {
+                return Err("URL cannot have a query".to_string());
+            }
+            if u.host().is_none() {
+                return Err("URL needs to contain a host".to_string());
+            }
+            u
+        }
+    };
+    let mut mqttoptions = MqttOptions::new("can2mqtt v3.0.0", url.host().unwrap().to_string(), url.port().unwrap_or(1883));
+    if url.password().is_some() {
+        mqttoptions.set_credentials(url.username(), url.password().unwrap());
+    }
+    Ok(AsyncClient::new(mqttoptions, 10))
 }
