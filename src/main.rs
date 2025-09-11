@@ -1,8 +1,8 @@
-// TODO the whole thingy has a high CPU usage (compared to the go version of can2mqtt)
 // TODO the go version detects if the can interface is down (this only checks whether interface is available)
 // TODO make log messages similar to the one of the go version
 // TODO the go version detects if the mqtt server is down / unreachable
 // TODO the go version detects whether the config exists...
+// TODO wrap asyncs in their own tasks to make all parallel
 // man lots of stuff todo...
 use can_socket::{CanFrame, tokio::CanSocket};
 use can2mqtt::types::C2MFlags;
@@ -12,12 +12,11 @@ use ctflag::Flags;
 use inotify::{Inotify, WatchMask};
 use log::*;
 use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Publish};
-use url::Url;
-use std::{
-    path::{self, PathBuf},
-};
+use tokio::task::JoinHandle;
+use std::path::{self, PathBuf};
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_stream::StreamExt;
+use url::Url;
 
 #[tokio::main]
 async fn main() {
@@ -74,22 +73,38 @@ async fn run(cs: CanSocket, client: AsyncClient, eventloop: EventLoop, abs_path:
 
     // Futures
     // config
-    let inotify = inotify_listener(abs_path.clone(), tx_inotify);
-    let cfg = send_config(rx_inotify, abs_path, &tx_mqtt, &tx_can); // parse config
+    let inotify = tokio::spawn(inotify_listener(abs_path.clone(), tx_inotify));
+    let cfg = tokio::spawn(send_config(rx_inotify, abs_path, tx_mqtt.clone(), tx_can.clone())); // parse config
     // mqtt
-    let mqtt_mng = mqtt_mng(rx_mqtt, client, &tx_can); // this will be where the mqtt client is
-    let mqtt_rx = mqtt_rx(&tx_mqtt, eventloop); // this will be where the eventloop runs
+    let mqtt_mng = tokio::spawn(mqtt_mng(rx_mqtt, client, tx_can.clone())); // this will be where the mqtt client is
+    let mqtt_rx = tokio::spawn(mqtt_rx(tx_mqtt.clone(), eventloop)); // this will be where the eventloop runs
     // can
-    let can_mng = can_mng(rx_can, &cs, &tx_mqtt);
-    let can_rx = can_rx(&tx_can, &cs);
+    let can_mng = can_mng(rx_can, &cs, tx_mqtt);
+    let can_rx = can_rx(tx_can, &cs);
 
-    tokio::join!(cfg, inotify, mqtt_mng, mqtt_rx, can_mng, can_rx);
+    // I have the suspicion that this thing here causes the high CPU load, probably tasks are better
+    // according to the docs, this is evaluated concurrently on the same task, so probably I should wrap
+    // all of these in their own task in order to get some parallelization?, yep thats exactly what the docs say
+    let r = tokio::try_join!(flatten(cfg), flatten(inotify), flatten(mqtt_mng), flatten(mqtt_rx), can_mng, can_rx);
+    match r {
+        Ok(_) => info!("All tasks finished successfully (should not happen, so not so successful as it sounds...)"),
+        Err(s) => error!("{s}")
+    };
 }
+
 // CONFIG
-async fn inotify_listener(abs_path: PathBuf, tx_inotify: Sender<()>) {
-    let watch_path = abs_path.parent().unwrap(); // to watch the dir
-    let filename = abs_path.file_name().unwrap().to_owned(); // to filter the watch 
-    let inotify = Inotify::init().expect("Error while initializing inotify instance");
+async fn inotify_listener(abs_path: PathBuf, tx_inotify: Sender<()>) -> Result<(), &'static str> {
+    let watch_path = abs_path
+        .parent()
+        .ok_or("setting up watch: file has no surrounding dir")?; // to watch the dir
+    let filename = abs_path
+        .file_name()
+        .ok_or("no trailing filename in path found")?;
+    // poor mans flatten because we deal with an io::Result and not with a core::result::Result
+    let inotify = match Inotify::init() {
+        Ok(i) => i,
+        Err(_) => return Err("error initializing inotify"),
+    };
 
     // Watch for modify and close events.
     inotify
@@ -104,19 +119,21 @@ async fn inotify_listener(abs_path: PathBuf, tx_inotify: Sender<()>) {
             tx_inotify.send(()).await.unwrap();
         }
     }
+    Err("left inotify loop. (thats not good)")
 }
 async fn send_config(
     mut rx_inotify: Receiver<()>,
     abs_path: PathBuf,
-    tx_mqtt: &Sender<MQTTMngEvent>,
-    tx_can: &Sender<CANMngEvent>,
-) {
+    tx_mqtt: Sender<MQTTMngEvent>,
+    tx_can: Sender<CANMngEvent>,
+) -> Result<(), &'static str> {
     while rx_inotify.recv().await.is_some() {
         if let Ok(c) = can2mqtt::config::parse(abs_path.to_str().unwrap()) {
             let _ = tx_mqtt.send(MQTTMngEvent::Config(Box::new(c.to_can))).await;
             let _ = tx_can.send(CANMngEvent::Config(Box::new(c.to_mqtt))).await;
         }
     }
+    Err("left config parsing loop. (thats not good)")
 }
 
 // MQTT
@@ -125,8 +142,8 @@ async fn send_config(
 async fn mqtt_mng(
     mut rx_mqtt: Receiver<MQTTMngEvent>,
     client: AsyncClient,
-    tx_can: &Sender<CANMngEvent>,
-) {
+    tx_can: Sender<CANMngEvent>,
+) -> Result<(), &'static str> {
     let mut config: ToCanMap = ToCanMap::new();
 
     while let Some(ev) = rx_mqtt.recv().await {
@@ -179,18 +196,28 @@ async fn mqtt_mng(
             }
         }
     }
+    Err("left the mqtt mng loop. (thats not good)")
 }
 
-async fn mqtt_rx(tx: &Sender<MQTTMngEvent>, mut eventloop: EventLoop) {
+async fn mqtt_rx(tx: Sender<MQTTMngEvent>, mut eventloop: EventLoop) -> Result<(), &'static str> {
     loop {
-        if let Ok(Event::Incoming(Packet::Publish(p))) = eventloop.poll().await {
-            let _ = tx.send(MQTTMngEvent::RX(p)).await;
+        match eventloop.poll().await {
+            Ok(e) => {
+                if let Event::Incoming(Packet::Publish(p)) = e {
+                    let _ = tx.send(MQTTMngEvent::RX(p)).await;
+                }
+            }
+            Err(_) => {
+                return Err(
+                    "connection error, exact info can't be given , since we have to be sized here... that means i can write an almost infinite message, as long as it is sized but i can not give the exact reason why we have an issue here right now, even if I have a fantastic struct sitting here with very detailed information what went wrong, no sized no info, sorry :)",
+                );
+            }
         }
     }
 }
 
 // CAN
-async fn can_mng(mut rx: Receiver<CANMngEvent>, cs: &CanSocket, tx_mqtt: &Sender<MQTTMngEvent>) {
+async fn can_mng(mut rx: Receiver<CANMngEvent>, cs: &CanSocket, tx_mqtt: Sender<MQTTMngEvent>) -> Result<(), &'static str> {
     let mut config = ToMqttMap::new();
     while let Some(ev) = rx.recv().await {
         match ev {
@@ -224,12 +251,28 @@ async fn can_mng(mut rx: Receiver<CANMngEvent>, cs: &CanSocket, tx_mqtt: &Sender
             }
         }
     }
+    Err("left the can_mng loop. thats not good")
 }
 
-async fn can_rx(tx: &Sender<CANMngEvent>, cs: &CanSocket) {
+async fn can_rx(tx: Sender<CANMngEvent>, cs: &CanSocket) -> Result<(), &'static str> {
     loop {
-        let cf = cs.recv().await.unwrap();
-        tx.send(CANMngEvent::RX(cf)).await.unwrap();
+        let cf = match cs.recv().await {
+            Ok(cf) => cf,
+            Err(_)  => return Err("issue while waiting for can frame") 
+        };
+        match tx.send(CANMngEvent::RX(cf)).await {
+            Ok(_) => (),
+            Err(_) => return Err("issue while sending canframe to can_mng")
+        }
+    }
+}
+
+// Typesystem boilerplate...
+async fn flatten<T>(handle: JoinHandle<Result<T, &'static str>>) -> Result<T, &'static str> {
+    match handle.await {
+        Ok(Ok(result)) => Ok(result),
+        Ok(Err(err)) => Err(err),
+        Err(_) => Err("handling failed"),
     }
 }
 
@@ -276,7 +319,9 @@ fn get_mqtt_connection(settings: String) -> Result<(AsyncClient, EventLoop), Str
                 return Err("invalid path: {u.path}".to_string());
             }
             if u.cannot_be_a_base() {
-                return Err("URL can not be cannot-be-a-base, enjoy the double negation...".to_string());
+                return Err(
+                    "URL can not be cannot-be-a-base, enjoy the double negation...".to_string(),
+                );
             }
             if u.fragment().is_some() {
                 return Err("URL fragment has to be empty".to_string());
@@ -290,7 +335,11 @@ fn get_mqtt_connection(settings: String) -> Result<(AsyncClient, EventLoop), Str
             u
         }
     };
-    let mut mqttoptions = MqttOptions::new("can2mqtt v3.0.0", url.host().unwrap().to_string(), url.port().unwrap_or(1883));
+    let mut mqttoptions = MqttOptions::new(
+        "can2mqtt v3.0.0",
+        url.host().unwrap().to_string(),
+        url.port().unwrap_or(1883),
+    );
     if url.password().is_some() {
         mqttoptions.set_credentials(url.username(), url.password().unwrap());
     }
