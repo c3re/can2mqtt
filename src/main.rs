@@ -11,9 +11,10 @@ use can2mqtt::{config::ToMqttMap, types::CANMngEvent};
 use ctflag::Flags;
 use inotify::{Inotify, WatchMask};
 use log::*;
-use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Publish};
+use rumqttc::{AsyncClient, ConnectReturnCode, Event, EventLoop, MqttOptions, Packet, Publish};
 use tokio::task::JoinHandle;
 use std::path::{self, PathBuf};
+use std::time::Duration;
 use tokio::sync::mpsc::{self, Receiver, Sender};
 use tokio_stream::StreamExt;
 use url::Url;
@@ -203,14 +204,26 @@ async fn mqtt_rx(tx: Sender<MQTTMngEvent>, mut eventloop: EventLoop) -> Result<(
     loop {
         match eventloop.poll().await {
             Ok(e) => {
-                if let Event::Incoming(Packet::Publish(p)) = e {
-                    let _ = tx.send(MQTTMngEvent::RX(p)).await;
+                if let Event::Incoming(i_event) = e {
+                    match i_event {
+                        Packet::ConnAck(ca) => {
+                            if ca.code == ConnectReturnCode::Success {
+                                info!("MQTT: Connected.")
+                            }
+                        },
+                        Packet::Publish(p) => {
+                            // Received message, forward to mqtt_mng
+                            let _ = tx.send(MQTTMngEvent::RX(p)).await;
+                        }
+                        _ => {}
+                    }
                 }
             }
-            Err(_) => {
-                return Err(
-                    "connection error, exact info can't be given , since we have to be sized here... that means i can write an almost infinite message, as long as it is sized but i can not give the exact reason why we have an issue here right now, even if I have a fantastic struct sitting here with very detailed information what went wrong, no sized no info, sorry :)",
-                );
+            Err(e) => {
+                warn!("MQTT: {e}, retrying...");
+                // try to reconnect, if fatal give up (and kill the whole program that way)
+                use tokio::time;
+                time::sleep(Duration::from_secs(3)).await;
             }
         }
     }
