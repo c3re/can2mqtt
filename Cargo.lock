@@ -210,9 +210,9 @@ checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
 name = "can-socket"
-version = "0.3.4"
+version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c82c1d0e8ff6029426bd5b010604f3545c4ccbc670ca2f91965ba1fe7b57103"
+checksum = "2d12bb05a45769a011aa5871799bf0fe95a480ae2a63e74131da13b737549756"
 dependencies = [
  "filedesc",
  "libc",
@@ -221,7 +221,7 @@ dependencies = [
 
 [[package]]
 name = "can2mqtt"
-version = "0.1.0"
+version = "3.0.0"
 dependencies = [
  "bitvec",
  "bytes",

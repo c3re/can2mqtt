@@ -1,8 +1,8 @@
 #![no_main]
 
 use libfuzzer_sys::fuzz_target;
-use can2mqtt_rs::converter::bytecolor2colorcode::ByteColor2ColorCodeConverter;
-use can2mqtt_rs::converter::types::*;
+use can2mqtt::converter::bytecolor2colorcode::ByteColor2ColorCodeConverter;
+use can2mqtt::converter::types::*;
 use regex::Regex;
 
 fuzz_target!(|data: &[u8]| {
