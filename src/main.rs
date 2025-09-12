@@ -1,5 +1,4 @@
 // TODO the go version detects if the can interface is down (this only checks whether interface is available)
-// TODO implement unidirectional mode
 // TODO draft release: release notes should include the information that the new version has slightly different behaviour:
 // Upon start when either the config file or the mqtt connection has a failure, the program does not stop (go version did that)
 // but retries infinetly instead (config file via inotify and mqtt via timeout, CAN I have to have a look)
@@ -20,7 +19,8 @@ use url::Url;
 
 #[tokio::main]
 async fn main() {
-    console_subscriber::init();
+    // this is cool to look at tasks with tokio-console:
+    //console_subscriber::init();
     let cs: CanSocket;
     let client: AsyncClient;
     let eventloop: EventLoop;
