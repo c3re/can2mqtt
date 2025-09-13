@@ -88,16 +88,17 @@ To debug the behaviour of can2mqtt you need to be able to send and receive CAN f
 
 ## Add a convert-Mode
 If you want to add a convert-Mode think about a name. This is the name that you can later refer to when you want to
-use your convert-Mode in the `can2mqtt.csv` config-file. Now, use the file `src/convertmode/mymode.go` as a template for your own convertmode. Copy that file to `src/convertmode/<yournewmode>.go`. Now change all occurrences of "MyMode" with your preferred Name (Lets say `YourNewMode` in this example). Note that it has to start with an upper-case letter, so that it is usable outside of this package. Next you have to write three functions (implement the `ConvertMode` interface):
-1. A conversion method from CAN -> MQTT: `ToMqtt(input can.Frame) ([]byte, error)`
-2. A conversion method from MQTT -> CAN: `ToCan(input []byte) (can.Frame, error)`
-3. A `String() string` method that reports the name of that convertmode. This method is used in some log-messages
+use your convert-Mode in the `can2mqtt.csv` config-file. Now, use the file `src/converter/mymode.rs` as a template for your own convertmode. Copy that file to `src/converter/<yournewmode>.rs`. Now change all occurrences of "MyMode" with your preferred Name (Lets say `YourNewMode` in this example). Next you have to write three functions (implement the `Converter` and `std::fmt::Display` trait):
+1. A conversion method from CAN -> MQTT: `towards_mqtt(self: &MyModeConverter, cf: CANFrame) -> Result<MQTTPayload, String>`
+2. A conversion method from MQTT -> CAN: `towards_can(self: &MyModeConverter, mut msg: MQTTPayload) -> Result<CANFrame, String>`
+3. A `fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result` method that reports the name of that convertmode. This method is used in some log-messages
 
-Your almost done, the last step is to "register" your new convertmode. To do so add the following line to [`src/main.go#L72`](./src/main.go#L72)
-```go
-convertModeFromString[convertmode.<YourNewMode>{}.String()] = convertmode.<YourNewMode>{}
+Your almost done, the last step is to "register" your new convertmode. To do so add the following to [`src/converter/all.rs#L29`](./src/all.rs#L29)
+```Rust
+    let yournewmodecv = Arc::new(YourNewMode::default());
+    convertmodes.insert(yournewmodecv.to_string(), yournewmodecv);
 ```
 
-Now you can use your new convertmode in your `can2mqtt.csv` config File. Use the string that your return in the `String()` function as the name of the convertmode. In the `mymode.go` code this is `"mymode"`.
+Now you can use your new convertmode in your `can2mqtt.csv` config File. Use the string that your return in the `fmt()` function as the name of the convertmode. In the `mymode.rs` code this is `"mymode"`.
 
 Good luck & happy hacking ✌
