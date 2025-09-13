@@ -1,0 +1,43 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "cargo run -p can2mqtt",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/target/debug/can2mqtt",
+            "env": {
+                "RUST_BACKTRACE": "short",
+                "RUSTC_TOOLCHAIN": "/home/mamu/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu"
+            },
+            "args": ["-h", "vcan0"],
+            "preLaunchTask": "rust: cargo build",
+            "sourceMap": {},
+            "sourceLanguages": [
+                "rust"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "run vcan0",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/target/debug/can2mqtt",
+            "env": {
+                "RUST_BACKTRACE": "short",
+                "RUSTC_TOOLCHAIN": "/home/mamu/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu"
+            },
+            "args": ["-h", "vcan0"],
+            "preLaunchTask": "rust: cargo build",
+            "sourceMap": {},
+            "sourceLanguages": [
+                "rust"
+            ]
+        }
+    ]
+}
