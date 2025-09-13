@@ -93,7 +93,7 @@ use your convert-Mode in the `can2mqtt.csv` config-file. Now, use the file `src/
 2. A conversion method from MQTT -> CAN: `towards_can(self: &MyModeConverter, mut msg: MQTTPayload) -> Result<CANFrame, String>`
 3. A `fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result` method that reports the name of that convertmode. This method is used in some log-messages
 
-Your almost done, the last step is to "register" your new convertmode. To do so add the following to [`src/converter/all.rs#L29`](./src/all.rs#L29)
+Your almost done, the last step is to "register" your new convertmode. To do so add the following to [`src/converter/all.rs#L29`](./src/converter/all.rs#L29)
 ```Rust
     let yournewmodecv = Arc::new(YourNewMode::default());
     convertmodes.insert(yournewmodecv.to_string(), yournewmodecv);
