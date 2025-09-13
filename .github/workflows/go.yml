@@ -1,4 +1,4 @@
-name: Go
+name: Build, Test, Fuzz
 
 on:
   pull_request:
@@ -8,26 +8,11 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.24
-
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
-    - name: Get dependencies
-      run: go get -v -t -d
-      working-directory: ./src
+      uses: actions/checkout@v4
 
     - name: Build
-      run: go build -v
-      working-directory: ./src
+      run: cargo build
 
-    - name: Test can2mqtt
-      run: go test -v
-      working-directory: ./src
-
-    - name: Test convertmodes
-      run: go test -v
-      working-directory: ./src/convertmode
+    - name: Test
+      run: cargo test
