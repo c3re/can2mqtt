@@ -2,6 +2,11 @@
 name = "can2mqtt"
 version = "3.0.0"
 edition = "2024"
+description = "CAN-Bus -- MQTT bridge: bidirectional, configurable and extendable"
+keywords = ["can-bus", "mqtt", "bridge", "linux", "raspberry"]
+categories = ["automotive"]
+repository = "https://github.com/c3re/can2mqtt"
+license = "MIT"
 
 [dependencies]
 can-socket = { version="0.3.5", features = ["tokio"]}
