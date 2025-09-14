@@ -1,0 +1,58 @@
+name: Build binaries
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  check-version:
+    name: Check Cargo.toml == tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Thanks to https://fassbender.dev/blog/001-cargo-publish-action/
+      - name: Install toml-cli
+        run: cargo install toml-cli
+
+      - name: Check version
+        run: test "v$(toml get -r Cargo.toml package.version)" = "${{ github.ref_name }}"
+
+  build-and-upload:
+    name: Compile binaries
+    needs: check-version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+       triples: [armv7-unknown-linux-musleabihf, x86_64-unknown-linux-musl]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install cross build tool
+        run: cargo install cross
+
+      - name: Build
+        run: cross build --target=${{ matrix.triples }} --release
+      
+      - name: Rename output
+        run: mv target/${{ matrix.triples }}/release/can2mqtt can2mqtt-${{ github.ref_name }}-${{ matrix.triples }}
+
+      - name: Upload Release Binary
+        uses: softprops/action-gh-release@v2
+        with:
+          files: can2mqtt-${{ github.ref_name }}-${{ matrix.triples }}
+  
+  cargo-publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: build-and-upload
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Publish
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
