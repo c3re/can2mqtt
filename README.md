@@ -5,13 +5,17 @@ Here you can see can2mqtt in action:
 [![can2mqtt demo](screenshot.png)](https://asciinema.org/a/542608?autoplay=1)
 
 ## Installation
+You can download prebuilt binaries or compile can2mqtt yourself.
+### Binary download
 The latest compiled binary is available in the [releases](https://github.com/c3re/can2mqtt/releases/latest).
-The binaries are statically linked and have no further dependencies. On a Raspberry you can install via:
+The binaries are statically linked (against [musl](https://www.musl-libc.org/)) and have no further dependencies. On a Raspberry you can install via:
 ```
 wget https://github.com/c3re/can2mqtt/releases/download/v3.0.1/can2mqtt-v3.0.1-armv7-unknown-linux-musleabihf -O can2mqtt
 chmod +x can2mqtt
 ./can2mqtt
 ```
+### Compile
+You need a Rust toolchain. [Here](https://rust-lang.org/learn/get-started/) is the standard guide how to obtain one. Apart from that, nothing special to take care of: clone, `cargo build`, and you are good to go. can2mqtt is also pushed to [crates.io](https://crates.io/crates/can2mqtt) so you can run `cargo install can2mqtt`.
 
 ## Usage
 The commandline parameters are the following:
